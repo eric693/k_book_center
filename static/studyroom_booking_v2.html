@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K書中心預約系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --accent: #4a90e2;
+            --secondary: #6b8cae;
+            --background: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --border: #e1e8ed;
+            --success: #27ae60;
+            --success-bg: #e8f5e9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        header {
+            padding: 60px 0 50px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header-left h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--primary);
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .header-desc {
+            font-size: 17px;
+            color: var(--text-light);
+            max-width: 500px;
+            line-height: 1.7;
+            margin-top: 16px;
+        }
+
+        .study-info-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 30px;
+            min-width: 260px;
+        }
+
+        .study-info-card .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .study-info-card .value {
+            font-size: 15px;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 18px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--success);
+            background: var(--success-bg);
+            padding: 4px 10px;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .main-content {
+            padding: 60px 0 100px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .section-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 50px;
+        }
+
+        .room-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(30, 58, 95, 0.08);
+        }
+
+        .room-card.selected {
+            border-color: var(--accent);
+            background: rgba(74, 144, 226, 0.03);
+        }
+
+        .room-type {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            background: rgba(74, 144, 226, 0.1);
+            padding: 4px 12px;
+            border-radius: 2px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .room-name {
+            font-family: 'Crimson Pro', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .room-capacity {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .room-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .feature-tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .room-price {
+            font-family: 'Crimson Pro', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .room-price-unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+
+        .calendar-section {
+            margin-bottom: 30px;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .current-month {
+            font-family: 'Crimson Pro', serif;
+            font-size: 22px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-btn {
+            background: none;
+            border: 1px solid var(--border);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--primary);
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 8px 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text);
+        }
+
+        .calendar-day:hover:not(.disabled):not(.other-month) {
+            border-color: var(--border);
+            background: var(--card-bg);
+        }
+
+        .calendar-day.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .calendar-day.today {
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .calendar-day.disabled,
+        .calendar-day.other-month {
+            color: var(--border);
+            cursor: default;
+        }
+
+        .time-slots-section {
+            margin-bottom: 50px;
+        }
+
+        .time-period {
+            margin-bottom: 24px;
+        }
+
+        .time-period-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        .time-slot:hover:not(.booked) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .time-slot.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .time-slot.booked {
+            background: var(--background);
+            color: var(--border);
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+            letter-spacing: 0.03em;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 30px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 35px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+            gap: 12px;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .summary-value.empty {
+            color: var(--border);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .summary-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-total .label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .summary-total .price {
+            font-family: 'Crimson Pro', serif;
+            font-size: 28px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .book-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Work Sans', sans-serif;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .book-btn:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(30, 58, 95, 0.15);
+        }
+
+        .notes-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            padding: 20px 24px;
+        }
+
+        .notes-card h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .notes-card ul {
+            list-style: none;
+        }
+
+        .notes-card ul li {
+            font-size: 13px;
+            color: var(--text-light);
+            padding: 5px 0;
+            padding-left: 14px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .notes-card ul li::before {
+            content: '–';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 60px 50px;
+            max-width: 520px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .confirm-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--success-bg);
+            border: 2px solid #c8e6c9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 28px;
+            font-family: 'Crimson Pro', serif;
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .modal-content h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .modal-content p {
+            color: var(--text-light);
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .confirm-details {
+            background: var(--background);
+            border: 1px solid var(--border);
+            padding: 20px 24px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .confirm-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .confirm-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .confirm-detail-item .key {
+            color: var(--text-light);
+        }
+
+        .confirm-detail-item .val {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .confirm-btn {
+            padding: 14px 40px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Work Sans', sans-serif;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-btn:hover {
+            background: var(--accent);
+        }
+
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-light);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+            .header-top {
+                flex-direction: column;
+            }
+            .rooms-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 20px;
+            }
+            .header-left h1 {
+                font-size: 40px;
+            }
+            .time-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-top">
+            <div class="header-left">
+                <div class="header-subtitle">學習空間 · 預約系統</div>
+                <h1>K書中心<br>座位預約</h1>
+                <p class="header-desc">
+                    單人座位、雙人討論區、小包廂，多種空間選擇，
+                    支援線上預約與 LINE 智慧客服。
+                </p>
+            </div>
+            <div class="study-info-card">
+                <div class="label">場館名稱</div>
+                <div class="value">K書中心 學習空間</div>
+                <div class="label">開放時間</div>
+                <div class="value">每日 08:00 – 23:00</div>
+                <div class="label">當前狀態</div>
+                <div class="value">
+                    <span class="status-badge">
+                        <span class="status-dot"></span>開放預約中
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="main-content">
+        <div class="left-panel">
+            
+            <div class="section-block">
+                <h2 class="section-title">選擇座位類型</h2>
+                <p class="section-subtitle">請選擇您需要的學習空間</p>
+
+                <div class="rooms-grid" id="roomsGrid">
+                    <!-- 動態載入 -->
+                </div>
+            </div>
+
+            <div class="section-block">
+                <h2 class="section-title">選擇日期</h2>
+                <p class="section-subtitle">請選擇您想預約的日期</p>
+
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <div style="display:flex;align-items:center;gap:20px;">
+                            <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+                            <div class="current-month" id="currentMonth"></div>
+                            <button class="nav-btn" onclick="changeMonth(1)">›</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
+            </div>
+
+            <div class="section-block" id="timeSlotsSection" style="display:none;">
+                <h2 class="section-title">選擇時段</h2>
+                <p class="section-subtitle" id="selectedDateLabel"></p>
+
+                <div class="time-slots-section">
+                    <div class="time-period">
+                        <div class="time-period-label">早晨 Morning</div>
+                        <div class="time-grid">
+                            <div class="time-slot" onclick="selectTime(this,'08:00')">08:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'09:00')">09:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'10:00')">10:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'11:00')">11:00</div>
+                        </div>
+                    </div>
+                    <div class="time-period">
+                        <div class="time-period-label">下午 Afternoon</div>
+                        <div class="time-grid">
+                            <div class="time-slot" onclick="selectTime(this,'12:00')">12:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'13:00')">13:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'14:00')">14:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'15:00')">15:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'16:00')">16:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'17:00')">17:00</div>
+                        </div>
+                    </div>
+                    <div class="time-period">
+                        <div class="time-period-label">晚間 Evening</div>
+                        <div class="time-grid">
+                            <div class="time-slot" onclick="selectTime(this,'18:00')">18:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'19:00')">19:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'20:00')">20:00</div>
+                            <div class="time-slot" onclick="selectTime(this,'21:00')">21:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:30px;">
+                    <label>結束時間</label>
+                    <input type="time" id="endTime" style="max-width:200px;">
+                </div>
+            </div>
+
+            <div class="section-block">
+                <h2 class="section-title">聯絡資料</h2>
+                <p class="section-subtitle">請填寫您的聯絡資訊</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>姓名</label>
+                        <input type="text" id="customerName" placeholder="請輸入姓名" oninput="updateSummary()">
+                    </div>
+                    <div class="form-group">
+                        <label>手機號碼</label>
+                        <input type="tel" id="customerPhone" placeholder="0912-345-678" oninput="updateSummary()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full">
+                        <label>備註</label>
+                        <textarea placeholder="有任何特殊需求嗎？（選填）"></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="sidebar">
+            <div class="summary-card">
+                <div class="summary-title">預約摘要</div>
+
+                <div class="summary-item">
+                    <div class="summary-label">座位</div>
+                    <div class="summary-value empty" id="sum-room">請選擇座位</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">日期</div>
+                    <div class="summary-value empty" id="sum-date">請選擇日期</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">時段</div>
+                    <div class="summary-value empty" id="sum-time">請選擇時段</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">時數</div>
+                    <div class="summary-value empty" id="sum-hours">0 小時</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">姓名</div>
+                    <div class="summary-value empty" id="sum-name">請填寫資料</div>
+                </div>
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-total">
+                    <div class="label">費用</div>
+                    <div class="price" id="sum-price">NT$ 0</div>
+                </div>
+            </div>
+
+            <button class="book-btn" onclick="submitBooking()">確認預約</button>
+
+            <div style="height:20px;"></div>
+
+            <div class="notes-card">
+                <h4>注意事項</h4>
+                <ul>
+                    <li>請提前 10 分鐘到場報到</li>
+                    <li>取消或更改請提前 2 小時通知</li>
+                    <li>場館提供 WiFi 與插座</li>
+                    <li>請保持安靜，勿影響他人</li>
+                    <li>禁止飲食（礦泉水除外）</li>
+                    <li>貴重物品請自行保管</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container">
+        © 2026 K書中心預約系統 · 支援 LINE 智慧預約
+    </div>
+</footer>
+
+<div class="modal" id="confirmModal">
+    <div class="modal-content">
+        <div class="confirm-icon">OK</div>
+        <h2>預約成功！</h2>
+        <p>您的座位預約已確認<br>預約編號將以簡訊傳送至您的手機</p>
+        <div class="confirm-details" id="confirmDetails"></div>
+        <button class="confirm-btn" onclick="closeConfirm()">完成</button>
+    </div>
+</div>
+
+<script>
+const API = '';
+const state = {
+    room: null,
+    roomId: null,
+    date: null,
+    startTime: null,
+    endTime: null,
+    hours: 0,
+    price: 0,
+    name: '',
+    phone: ''
+};
+
+let rooms = [];
+let currentDate = new Date();
+const months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const days = ['日','一','二','三','四','五','六'];
+
+async function loadRooms() {
+    try {
+        const res = await fetch(`${API}/api/rooms`);
+        rooms = await res.json();
+        renderRooms();
+    } catch (e) {
+        console.error('載入座位失敗', e);
+    }
+}
+
+function renderRooms() {
+    const typeNames = {
+        'single': '單人座位',
+        'double': '雙人座位',
+        'group': '小包廂',
+        'vip': 'VIP包廂'
+    };
+    
+    const grid = document.getElementById('roomsGrid');
+    grid.innerHTML = rooms.map(room => `
+        <div class="room-card" onclick="selectRoom(${room.id}, '${room.name}', '${room.type}', ${room.hourly_rate})">
+            <div class="room-type">${typeNames[room.type] || room.type}</div>
+            <div class="room-name">${room.name}</div>
+            <div class="room-capacity">可容納 ${room.capacity} 人</div>
+            <div class="room-features">
+                <span class="feature-tag">獨立插座</span>
+                <span class="feature-tag">WiFi</span>
+                ${room.type === 'group' || room.type === 'vip' ? '<span class="feature-tag">白板</span>' : ''}
+            </div>
+            <div class="room-price">
+                NT$ ${room.hourly_rate}
+                <span class="room-price-unit">/ 小時</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectRoom(id, name, type, rate) {
+    state.roomId = id;
+    state.room = name;
+    state.hourlyRate = rate;
+    
+    document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    
+    document.getElementById('sum-room').textContent = name;
+    document.getElementById('sum-room').classList.remove('empty');
+    updatePrice();
+}
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    document.getElementById('currentMonth').textContent = `${year} 年 ${months[month]}`;
+    
+    const grid = document.getElementById('calendarGrid');
+    const today = new Date();
+    let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevDays = new Date(year, month, 0).getDate();
+    
+    for (let i = firstDay - 1; i >= 0; i--)
+        html += `<div class="calendar-day other-month">${prevDays - i}</div>`;
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const isToday = date.toDateString() === today.toDateString();
+        const isPast = date < today && !isToday;
+        const classes = ['calendar-day', isToday?'today':'', isPast?'disabled':''].filter(Boolean).join(' ');
+        const onclick = !isPast ? `onclick="selectDate(${year},${month},${d})"` : '';
+        html += `<div class="${classes}" ${onclick}>${d}</div>`;
+    }
+    
+    const rem = (7 - (firstDay + daysInMonth) % 7) % 7;
+    for (let d = 1; d <= rem; d++)
+        html += `<div class="calendar-day other-month">${d}</div>`;
+    
+    grid.innerHTML = html;
+}
+
+function changeMonth(dir) {
+    currentDate.setMonth(currentDate.getMonth() + dir);
+    renderCalendar();
+}
+
+function selectDate(year, month, day) {
+    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    
+    const d = new Date(year, month, day);
+    state.date = `${year}/${String(month+1).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+    const weekdays = ['日','一','二','三','四','五','六'];
+    
+    document.getElementById('sum-date').textContent = state.date + ' 週' + weekdays[d.getDay()];
+    document.getElementById('sum-date').classList.remove('empty');
+    document.getElementById('selectedDateLabel').textContent = `${state.date} 週${weekdays[d.getDay()]} 可預約時段`;
+    document.getElementById('timeSlotsSection').style.display = 'block';
+    
+    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+    state.startTime = null;
+    document.getElementById('sum-time').textContent = '請選擇時段';
+    document.getElementById('sum-time').className = 'summary-value empty';
+}
+
+function selectTime(el, time) {
+    document.querySelectorAll('.time-slot:not(.booked)').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    state.startTime = time;
+    updateSummary();
+}
+
+function updateSummary() {
+    if (state.startTime) {
+        const endTime = document.getElementById('endTime').value || '';
+        if (endTime) {
+            state.endTime = endTime;
+            const start = new Date(`2000-01-01 ${state.startTime}`);
+            const end = new Date(`2000-01-01 ${endTime}`);
+            const hours = (end - start) / (1000 * 60 * 60);
+            
+            if (hours > 0) {
+                state.hours = hours;
+                document.getElementById('sum-time').textContent = `${state.startTime} - ${endTime}`;
+                document.getElementById('sum-time').classList.remove('empty');
+                document.getElementById('sum-hours').textContent = `${hours} 小時`;
+                document.getElementById('sum-hours').classList.remove('empty');
+                updatePrice();
+            }
+        } else {
+            document.getElementById('sum-time').textContent = `${state.startTime} - ?`;
+            document.getElementById('sum-time').classList.remove('empty');
+        }
+    }
+    
+    const name = document.getElementById('customerName').value;
+    const phone = document.getElementById('customerPhone').value;
+    if (name) {
+        state.name = name;
+        state.phone = phone;
+        document.getElementById('sum-name').textContent = name + (phone ? ` · ${phone}` : '');
+        document.getElementById('sum-name').classList.remove('empty');
+    }
+}
+
+function updatePrice() {
+    if (state.hours && state.hourlyRate) {
+        state.price = state.hours * state.hourlyRate;
+        document.getElementById('sum-price').textContent = 'NT$ ' + state.price;
+    }
+}
+
+async function submitBooking() {
+    if (!state.roomId || !state.date || !state.startTime || !state.endTime || !state.name || !state.phone) {
+        alert('請完整填寫預約資訊');
+        return;
+    }
+    
+    const data = {
+        room_id: state.roomId,
+        date: state.date,
+        start_time: state.startTime,
+        end_time: state.endTime,
+        name: state.name,
+        phone: state.phone
+    };
+    
+    try {
+        const res = await fetch(`${API}/api/book`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+            const result = await res.json();
+            showConfirmation(result.booking);
+        } else {
+            const error = await res.json();
+            alert(error.error || '預約失敗');
+        }
+    } catch (e) {
+        alert('預約失敗：' + e.message);
+    }
+}
+
+function showConfirmation(booking) {
+    const details = [
+        ['預約編號', booking.booking_number],
+        ['座位', state.room],
+        ['日期', state.date],
+        ['時段', `${state.startTime} - ${state.endTime}`],
+        ['時數', `${state.hours} 小時`],
+        ['姓名', state.name],
+        ['費用', `NT$ ${state.price}`]
+    ];
+    
+    document.getElementById('confirmDetails').innerHTML = details
+        .map(([k,v]) => `<div class="confirm-detail-item"><span class="key">${k}</span><span class="val">${v}</span></div>`)
+        .join('');
+    
+    document.getElementById('confirmModal').classList.add('active');
+}
+
+function closeConfirm() {
+    document.getElementById('confirmModal').classList.remove('active');
+    location.reload();
+}
+
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+});
+
+document.getElementById('endTime').addEventListener('change', updateSummary);
+
+loadRooms();
+renderCalendar();
+</script>
+
+</body>
+</html>

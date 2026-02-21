@@ -20,7 +20,7 @@ db = SQLAlchemy(app)
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', 'bsrjgyZslyN8i+Viovdziaubx93+la9jXStCpa3hvhG6wWuTZ4EJRMn3RocbjHR/HHuZRsOJXPnhF/eEy8UvlYBxoqZ4lf7n8P0DPPbAz7DRxl5Bdj9vqSqj6VH2nPDxMr8B8rpCDffas5WfEC2eXQdB04t89/1O/w1cDnyilFU=')
-LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
+LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '1c4fba5e0fddb8165b20a83207cd0111')
 
 # ─────────────────────────────────────────────
 # 資料模型
