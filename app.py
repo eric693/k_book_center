@@ -23,9 +23,9 @@ ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
 LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
 
-# ─────────────────────────────────────────────
-# 資料模型
-# ─────────────────────────────────────────────
+# 
+# 
+# 
 
 class Teacher(db.Model):
     __tablename__ = 'teachers'
@@ -111,7 +111,7 @@ class Customer(db.Model):
     total_spent    = db.Column(db.Integer, default=0)
     created_at     = db.Column(db.DateTime, default=datetime.now)
 
-    # 暫存預約流程狀態（可改用 Redis）
+    #  Redis
     pending_teacher_id = db.Column(db.Integer)
     pending_date       = db.Column(db.String(10))
 
@@ -127,9 +127,9 @@ class AIConversation(db.Model):
     created_at   = db.Column(db.DateTime, default=datetime.now)
 
 
-# ─────────────────────────────────────────────
-# 輔助函式
-# ─────────────────────────────────────────────
+# 
+# 
+# 
 
 def check_admin():
     pw = request.headers.get('X-Admin-Password')
@@ -202,7 +202,7 @@ def send_flex_message(user_id, alt_text, flex_content):
         r = requests.post(url, headers=headers, json=data, timeout=10)
         return r.status_code == 200
     except Exception as e:
-        print(f'Push Flex 失敗: {e}')
+        print(f'Push Flex : {e}')
         return False
 
 
@@ -226,15 +226,15 @@ def reply_flex_message(reply_token, alt_text, flex_content):
     try:
         r = requests.post(url, headers=headers, json=data, timeout=10)
         if r.status_code != 200:
-            print(f'Reply Flex 失敗: {r.status_code} {r.text}')
+            print(f'Reply Flex : {r.status_code} {r.text}')
         return r.status_code == 200
     except Exception as e:
-        print(f'Reply Flex 失敗: {e}')
+        print(f'Reply Flex : {e}')
         return False
 
 
 def reply_text_message(reply_token, text):
-    """Reply 純文字（備用）"""
+    """Reply """
     if not LINE_CHANNEL_ACCESS_TOKEN:
         return False
     url = 'https://api.line.me/v2/bot/message/reply'
@@ -250,7 +250,7 @@ def reply_text_message(reply_token, text):
         r = requests.post(url, headers=headers, json=data, timeout=10)
         return r.status_code == 200
     except Exception as e:
-        print(f'Reply Text 失敗: {e}')
+        print(f'Reply Text : {e}')
         return False
 
 
@@ -267,21 +267,21 @@ def send_text_message(user_id, text):
         r = requests.post(url, headers=headers, json=data, timeout=10)
         return r.status_code == 200
     except Exception as e:
-        print(f'Push Text 失敗: {e}')
+        print(f'Push Text : {e}')
         return False
 
 
 def send_admin_notification(message):
-    print(f'管理員通知: {message}')
+    print(f': {message}')
     return True
 
 
-# ─────────────────────────────────────────────
-# Flex Message 模板
-# ─────────────────────────────────────────────
+# 
+# Flex Message 
+# 
 
 def build_welcome_flex():
-    """歡迎選單"""
+    """"""
     return {
         "type": "bubble",
         "size": "mega",
@@ -289,9 +289,9 @@ def build_welcome_flex():
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "📚 K書中心", "weight": "bold",
+                {"type": "text", "text": " K", "weight": "bold",
                  "size": "xl", "color": "#ffffff"},
-                {"type": "text", "text": "請選擇您需要的服務", "size": "sm",
+                {"type": "text", "text": "", "size": "sm",
                  "color": "#ffffff99"}
             ],
             "backgroundColor": "#4A90E2",
@@ -308,8 +308,8 @@ def build_welcome_flex():
                     "color": "#4A90E2",
                     "action": {
                         "type": "message",
-                        "label": "📋 查看老師名單",
-                        "text": "老師名單"
+                        "label": " ",
+                        "text": ""
                     },
                     "height": "sm"
                 },
@@ -318,8 +318,8 @@ def build_welcome_flex():
                     "style": "secondary",
                     "action": {
                         "type": "message",
-                        "label": "📅 查詢我的預約",
-                        "text": "查詢預約"
+                        "label": " ",
+                        "text": ""
                     },
                     "height": "sm"
                 }
@@ -329,10 +329,10 @@ def build_welcome_flex():
 
 
 def build_teacher_carousel(teachers):
-    """老師列表 Carousel"""
+    """ Carousel"""
     bubbles = []
     for t in teachers:
-        # 專長截短
+        # 
         specialty_short = (t.specialty or '')[:30] + ('...' if len(t.specialty or '') > 30 else '')
 
         bubble = {
@@ -344,7 +344,7 @@ def build_teacher_carousel(teachers):
                 "contents": [
                     {
                         "type": "text",
-                        "text": t.name + " 老師",
+                        "text": t.name + " ",
                         "weight": "bold",
                         "size": "lg",
                         "color": "#ffffff"
@@ -369,7 +369,7 @@ def build_teacher_carousel(teachers):
                         "layout": "baseline",
                         "spacing": "sm",
                         "contents": [
-                            {"type": "text", "text": "專長", "color": "#aaaaaa",
+                            {"type": "text", "text": "", "color": "#aaaaaa",
                              "size": "sm", "flex": 1},
                             {"type": "text", "text": specialty_short,
                              "wrap": True, "color": "#666666", "size": "sm", "flex": 4}
@@ -380,7 +380,7 @@ def build_teacher_carousel(teachers):
                         "layout": "baseline",
                         "spacing": "sm",
                         "contents": [
-                            {"type": "text", "text": "時薪", "color": "#aaaaaa",
+                            {"type": "text", "text": "", "color": "#aaaaaa",
                              "size": "sm", "flex": 1},
                             {"type": "text", "text": f"${t.hourly_rate}/hr",
                              "color": "#E05A2B", "size": "sm", "flex": 4, "weight": "bold"}
@@ -399,9 +399,9 @@ def build_teacher_carousel(teachers):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "選擇此老師",
+                            "label": "",
                             "data": f"action=select_teacher&teacher_id={t.id}&teacher_name={t.name}",
-                            "displayText": f"我想預約 {t.name} 老師"
+                            "displayText": f" {t.name} "
                         }
                     }
                 ]
@@ -416,23 +416,23 @@ def build_teacher_carousel(teachers):
 
 
 def build_date_picker_flex(teacher_id, teacher_name):
-    """日期選擇（提供未來7天按鈕）"""
+    """7"""
     today = datetime.now().date()
     date_buttons = []
 
     for i in range(1, 8):
         d = today + timedelta(days=i)
-        label = d.strftime('%m/%d') + (' (明天)' if i == 1 else '')
-        weekday = ['一', '二', '三', '四', '五', '六', '日'][d.weekday()]
+        label = d.strftime('%m/%d') + (' ()' if i == 1 else '')
+        weekday = ['', '', '', '', '', '', ''][d.weekday()]
         date_buttons.append({
             "type": "button",
             "style": "secondary",
             "height": "sm",
             "action": {
                 "type": "postback",
-                "label": f"{d.strftime('%m/%d')} (週{weekday})",
+                "label": f"{d.strftime('%m/%d')} ({weekday})",
                 "data": f"action=select_date&teacher_id={teacher_id}&date={d.strftime('%Y-%m-%d')}",
-                "displayText": f"選擇 {d.strftime('%Y-%m-%d')}"
+                "displayText": f" {d.strftime('%Y-%m-%d')}"
             }
         })
 
@@ -443,9 +443,9 @@ def build_date_picker_flex(teacher_id, teacher_name):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": f"預約 {teacher_name} 老師",
+                {"type": "text", "text": f" {teacher_name} ",
                  "weight": "bold", "size": "lg", "color": "#ffffff"},
-                {"type": "text", "text": "請選擇上課日期",
+                {"type": "text", "text": "",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#27AE60",
@@ -461,7 +461,7 @@ def build_date_picker_flex(teacher_id, teacher_name):
 
 
 def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
-    """時段選擇"""
+    """"""
     if not available_times:
         return {
             "type": "bubble",
@@ -469,9 +469,9 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
-                    {"type": "text", "text": "😢 此日期已無可用時段",
+                    {"type": "text", "text": " ",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "請返回選擇其他日期",
+                    {"type": "text", "text": "",
                      "color": "#888888", "size": "sm", "margin": "md"}
                 ]
             },
@@ -483,15 +483,15 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                     "style": "secondary",
                     "action": {
                         "type": "postback",
-                        "label": "← 重新選擇日期",
+                        "label": "<- 返回",
                         "data": f"action=select_teacher&teacher_id={teacher_id}&teacher_name={teacher_name}",
-                        "displayText": f"重新選擇日期"
+                        "displayText": f""
                     }
                 }]
             }
         }
 
-    # 每行顯示3個時段
+    # 3
     time_rows = []
     row = []
     for i, t in enumerate(available_times):
@@ -504,11 +504,11 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                 "type": "postback",
                 "label": t,
                 "data": f"action=select_time&teacher_id={teacher_id}&date={date}&time={t}",
-                "displayText": f"選擇 {t}"
+                "displayText": f" {t}"
             }
         })
         if len(row) == 3 or i == len(available_times) - 1:
-            # 補空格讓最後一行對齊
+            # 
             while len(row) < 3:
                 row.append({"type": "filler"})
             time_rows.append({
@@ -519,7 +519,7 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
             })
             row = []
 
-    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%m月%d日')
+    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%m%d')
 
     return {
         "type": "bubble",
@@ -528,9 +528,9 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": f"預約 {teacher_name} 老師",
+                {"type": "text", "text": f" {teacher_name} ",
                  "weight": "bold", "size": "lg", "color": "#ffffff"},
-                {"type": "text", "text": f"📅 {d_fmt}　請選擇時段",
+                {"type": "text", "text": f" {d_fmt}",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#27AE60",
@@ -546,9 +546,9 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
 
 
 def build_confirm_flex(teacher_name, date, time, price, teacher_id):
-    """預約確認卡片"""
-    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%Y年%m月%d日')
-    weekday = ['一', '二', '三', '四', '五', '六', '日'][
+    """"""
+    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d')
+    weekday = ['', '', '', '', '', '', ''][
         datetime.strptime(date, '%Y-%m-%d').weekday()
     ]
     return {
@@ -558,7 +558,7 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "確認預約資訊",
+                {"type": "text", "text": "",
                  "weight": "bold", "size": "xl", "color": "#ffffff"},
             ],
             "backgroundColor": "#E67E22",
@@ -569,18 +569,18 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
             "layout": "vertical",
             "spacing": "md",
             "contents": [
-                _info_row("👨‍🏫 老師", f"{teacher_name} 老師"),
-                _info_row("📅 日期", f"{d_fmt} (週{weekday})"),
-                _info_row("🕐 時間", time),
-                _info_row("⏱ 時長", "60 分鐘"),
-                _info_row("💰 費用", f"$ {price} 元"),
+                _info_row(" ", f"{teacher_name} "),
+                _info_row(" ", f"{d_fmt} ({weekday})"),
+                _info_row(" ", time),
+                _info_row("時長", "60 分鐘"),
+                _info_row(" ", f"$ {price} "),
                 {
                     "type": "separator",
                     "margin": "md"
                 },
                 {
                     "type": "text",
-                    "text": "確認後將完成預約，請準時出席。",
+                    "text": "",
                     "size": "xs",
                     "color": "#888888",
                     "wrap": True,
@@ -600,9 +600,9 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
                     "height": "sm",
                     "action": {
                         "type": "postback",
-                        "label": "← 返回",
+                        "label": "<- 返回",
                         "data": f"action=select_date&teacher_id={teacher_id}&date={date}",
-                        "displayText": "重新選擇時段"
+                        "displayText": ""
                     }
                 },
                 {
@@ -613,9 +613,9 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
                     "height": "sm",
                     "action": {
                         "type": "postback",
-                        "label": "✅ 確認預約",
+                        "label": " ",
                         "data": f"action=confirm_booking&teacher_id={teacher_id}&date={date}&time={time}",
-                        "displayText": f"確認預約 {teacher_name} 老師 {date} {time}"
+                        "displayText": f" {teacher_name}  {date} {time}"
                     }
                 }
             ]
@@ -624,10 +624,10 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
 
 
 def build_booking_success_flex(booking):
-    """預約成功卡片"""
+    """"""
     teacher_name = booking.teacher.name if booking.teacher else ''
-    d_fmt = datetime.strptime(booking.date, '%Y-%m-%d').strftime('%Y年%m月%d日')
-    weekday = ['一', '二', '三', '四', '五', '六', '日'][
+    d_fmt = datetime.strptime(booking.date, '%Y-%m-%d').strftime('%Y%m%d')
+    weekday = ['', '', '', '', '', '', ''][
         datetime.strptime(booking.date, '%Y-%m-%d').weekday()
     ]
     return {
@@ -637,7 +637,7 @@ def build_booking_success_flex(booking):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "🎉 預約成功！",
+                {"type": "text", "text": " ",
                  "weight": "bold", "size": "xl", "color": "#ffffff"},
                 {"type": "text", "text": booking.booking_number,
                  "size": "sm", "color": "#ffffff99"}
@@ -650,18 +650,18 @@ def build_booking_success_flex(booking):
             "layout": "vertical",
             "spacing": "md",
             "contents": [
-                _info_row("👨‍🏫 老師", f"{teacher_name} 老師"),
-                _info_row("📅 日期", f"{d_fmt} (週{weekday})"),
-                _info_row("🕐 時間", booking.time),
-                _info_row("⏱ 時長", f"{booking.duration} 分鐘"),
-                _info_row("💰 費用", f"$ {booking.total_price} 元"),
+                _info_row(" ", f"{teacher_name} "),
+                _info_row(" ", f"{d_fmt} ({weekday})"),
+                _info_row(" ", booking.time),
+                _info_row("時長", f"{booking.duration} 分鐘"),
+                _info_row(" ", f"$ {booking.total_price} "),
                 {
                     "type": "separator",
                     "margin": "md"
                 },
                 {
                     "type": "text",
-                    "text": "請準時出席，期待您的到來！",
+                    "text": "",
                     "size": "sm",
                     "color": "#27AE60",
                     "wrap": True,
@@ -679,8 +679,8 @@ def build_booking_success_flex(booking):
                 "height": "sm",
                 "action": {
                     "type": "message",
-                    "label": "查詢我的預約",
-                    "text": "查詢預約"
+                    "label": "",
+                    "text": ""
                 }
             }]
         }
@@ -688,7 +688,7 @@ def build_booking_success_flex(booking):
 
 
 def build_my_bookings_flex(bookings):
-    """我的預約列表"""
+    """"""
     if not bookings:
         return {
             "type": "bubble",
@@ -696,9 +696,9 @@ def build_my_bookings_flex(bookings):
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
-                    {"type": "text", "text": "📅 尚無預約記錄",
+                    {"type": "text", "text": " ",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "點下方按鈕開始預約課程",
+                    {"type": "text", "text": "",
                      "color": "#888888", "size": "sm", "margin": "md"}
                 ]
             },
@@ -711,8 +711,8 @@ def build_my_bookings_flex(bookings):
                     "color": "#4A90E2",
                     "action": {
                         "type": "message",
-                        "label": "查看老師名單",
-                        "text": "老師名單"
+                        "label": "",
+                        "text": ""
                     }
                 }]
             }
@@ -720,7 +720,7 @@ def build_my_bookings_flex(bookings):
 
     bubbles = []
     for b in bookings:
-        teacher_name = b.teacher.name if b.teacher else '未知'
+        teacher_name = b.teacher.name if b.teacher else ''
         d_fmt = datetime.strptime(b.date, '%Y-%m-%d').strftime('%m/%d')
         bubble = {
             "type": "bubble",
@@ -732,11 +732,11 @@ def build_my_bookings_flex(bookings):
                 "contents": [
                     {"type": "text", "text": b.booking_number,
                      "color": "#888888", "size": "xs"},
-                    {"type": "text", "text": f"{teacher_name} 老師",
+                    {"type": "text", "text": f"{teacher_name} ",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": f"📅 {d_fmt}  🕐 {b.time}",
+                    {"type": "text", "text": f" {d_fmt}   {b.time}",
                      "size": "sm", "color": "#555555"},
-                    {"type": "text", "text": f"💰 ${b.total_price} 元",
+                    {"type": "text", "text": f" ${b.total_price} ",
                      "size": "sm", "color": "#E05A2B"}
                 ]
             },
@@ -750,9 +750,9 @@ def build_my_bookings_flex(bookings):
                     "color": "#FF4444",
                     "action": {
                         "type": "postback",
-                        "label": "取消預約",
+                        "label": "",
                         "data": f"action=cancel_booking&booking_id={b.id}",
-                        "displayText": f"取消預約 {b.booking_number}"
+                        "displayText": f" {b.booking_number}"
                     }
                 }]
             }
@@ -766,7 +766,7 @@ def build_my_bookings_flex(bookings):
 
 
 def build_register_flex(teacher_id, date, time):
-    """要求使用者提供姓名電話"""
+    """"""
     return {
         "type": "bubble",
         "size": "mega",
@@ -774,9 +774,9 @@ def build_register_flex(teacher_id, date, time):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "📝 完成註冊", "weight": "bold",
+                {"type": "text", "text": " ", "weight": "bold",
                  "size": "xl", "color": "#ffffff"},
-                {"type": "text", "text": "首次預約，請提供基本資料",
+                {"type": "text", "text": "",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#8E44AD",
@@ -789,7 +789,7 @@ def build_register_flex(teacher_id, date, time):
             "contents": [
                 {
                     "type": "text",
-                    "text": "請回覆以下格式：\n\n註冊 姓名 手機號碼\n\n範例：\n註冊 張小明 0912345678",
+                    "text": "\n\n  \n\n\n  0912345678",
                     "wrap": True,
                     "size": "sm",
                     "color": "#555555"
@@ -800,7 +800,7 @@ def build_register_flex(teacher_id, date, time):
 
 
 def _info_row(label, value):
-    """通用資訊行"""
+    """"""
     return {
         "type": "box",
         "layout": "baseline",
@@ -814,9 +814,9 @@ def _info_row(label, value):
     }
 
 
-# ─────────────────────────────────────────────
+# 
 # LINE Webhook
-# ─────────────────────────────────────────────
+# 
 
 @app.route('/webhook/line', methods=['POST'])
 def line_webhook():
@@ -831,14 +831,14 @@ def line_webhook():
         ).digest()
         expected_signature = base64.b64encode(hash_value).decode('utf-8')
         if signature != expected_signature:
-            print('LINE 簽章驗證失敗')
+            print('LINE ')
             return 'Invalid signature', 403
 
     try:
         payload = json.loads(body) if body else {}
         events = payload.get('events', [])
     except Exception as e:
-        print(f'JSON 解析失敗: {e}')
+        print(f'JSON : {e}')
         return 'OK', 200
 
     if not events:
@@ -853,49 +853,49 @@ def line_webhook():
 
             event_type = event.get('type')
 
-            # ── 文字訊息 ──
+            #   
             if event_type == 'message' and event.get('message', {}).get('type') == 'text':
                 text = event['message']['text'].strip()
                 handle_text_event(reply_token, user_id, text)
 
-            # ── Postback（按鈕點擊）──
+            #  Postback
             elif event_type == 'postback':
                 data = event.get('postback', {}).get('data', '')
                 handle_postback_event(reply_token, user_id, data)
 
-            # ── 加入好友 ──
+            #   
             elif event_type == 'follow':
                 flex = build_welcome_flex()
-                reply_flex_message(reply_token, '歡迎使用 K書中心預約系統', flex)
+                reply_flex_message(reply_token, ' K', flex)
 
         except Exception as e:
-            print(f'處理 event 失敗: {e}')
+            print(f' event : {e}')
             import traceback; traceback.print_exc()
 
     return 'OK', 200
 
 
 def handle_text_event(reply_token, user_id, text):
-    """處理文字訊息"""
+    """"""
 
-    # 老師名單
-    if '老師名單' in text or '老師列表' in text:
+    # 
+    if '' in text or '' in text:
         teachers = Teacher.query.filter_by(is_active=True).all()
         flex = build_teacher_carousel(teachers)
-        reply_flex_message(reply_token, f'目前有 {len(teachers)} 位老師可預約', flex)
+        reply_flex_message(reply_token, f' {len(teachers)} ', flex)
         return
 
-    # 查詢預約
-    if '查詢' in text or '我的預約' in text:
+    # 
+    if '' in text or '' in text:
         bookings = Booking.query.filter_by(
             line_user_id=user_id, status='confirmed'
         ).order_by(Booking.date, Booking.time).all()
         flex = build_my_bookings_flex(bookings)
-        reply_flex_message(reply_token, f'您有 {len(bookings)} 筆預約', flex)
+        reply_flex_message(reply_token, f' {len(bookings)} ', flex)
         return
 
-    # 註冊：「註冊 姓名 電話」
-    if text.startswith('註冊'):
+    #   
+    if text.startswith(''):
         parts = text.split()
         if len(parts) >= 3:
             name = parts[1]
@@ -909,57 +909,57 @@ def handle_text_event(reply_token, user_id, text):
                 customer = Customer(name=name, phone=phone, line_user_id=user_id)
                 db.session.add(customer)
                 db.session.commit()
-            reply_text_message(reply_token, f'✅ 歡迎 {name}！已完成註冊，請繼續選擇預約時間。')
+            reply_text_message(reply_token, f'  {name}')
         else:
-            reply_text_message(reply_token, '格式錯誤，請使用：\n註冊 姓名 手機號碼\n例：註冊 張小明 0912345678')
+            reply_text_message(reply_token, '\n  \n  0912345678')
         return
 
-    # 其他：顯示選單
+    # 
     flex = build_welcome_flex()
-    reply_flex_message(reply_token, 'K書中心預約系統', flex)
+    reply_flex_message(reply_token, 'K', flex)
 
 
 def handle_postback_event(reply_token, user_id, data):
-    """處理 Postback（按鈕點擊）"""
+    """ Postback"""
     params = dict(p.split('=', 1) for p in data.split('&') if '=' in p)
     action = params.get('action', '')
 
-    # 1. 選擇老師 → 顯示日期選擇
+    # 1. 選擇老師 -> 顯示日期選擇
     if action == 'select_teacher':
         teacher_id = int(params.get('teacher_id', 0))
         teacher = Teacher.query.get(teacher_id)
         if not teacher:
-            reply_text_message(reply_token, '老師不存在，請重新選擇。')
+            reply_text_message(reply_token, '')
             return
         flex = build_date_picker_flex(teacher.id, teacher.name)
-        reply_flex_message(reply_token, f'選擇預約日期 - {teacher.name} 老師', flex)
+        reply_flex_message(reply_token, f' - {teacher.name} ', flex)
 
-    # 2. 選擇日期 → 顯示時段
+    # 2. 選擇日期 -> 顯示時段
     elif action == 'select_date':
         teacher_id = int(params.get('teacher_id', 0))
         date = params.get('date', '')
         teacher = Teacher.query.get(teacher_id)
         if not teacher or not date:
-            reply_text_message(reply_token, '參數錯誤，請重新選擇。')
+            reply_text_message(reply_token, '')
             return
         available = get_available_times(teacher_id, date)
         flex = build_time_picker_flex(teacher_id, teacher.name, date, available)
-        reply_flex_message(reply_token, f'{date} 可用時段', flex)
+        reply_flex_message(reply_token, f'{date} ', flex)
 
-    # 3. 選擇時段 → 顯示確認畫面
+    # 3. 選擇時段 -> 顯示確認畫面
     elif action == 'select_time':
         teacher_id = int(params.get('teacher_id', 0))
         date = params.get('date', '')
         time = params.get('time', '')
         teacher = Teacher.query.get(teacher_id)
         if not teacher:
-            reply_text_message(reply_token, '老師不存在。')
+            reply_text_message(reply_token, '')
             return
         price = teacher.hourly_rate
         flex = build_confirm_flex(teacher.name, date, time, price, teacher_id)
-        reply_flex_message(reply_token, '確認預約資訊', flex)
+        reply_flex_message(reply_token, '', flex)
 
-    # 4. 確認預約 → 完成
+    # 4. 確認預約 -> 完成
     elif action == 'confirm_booking':
         teacher_id = int(params.get('teacher_id', 0))
         date = params.get('date', '')
@@ -967,18 +967,18 @@ def handle_postback_event(reply_token, user_id, data):
         teacher = Teacher.query.get(teacher_id)
 
         if not teacher:
-            reply_text_message(reply_token, '老師不存在。')
+            reply_text_message(reply_token, '')
             return
 
         if not check_availability(teacher_id, date, time):
-            reply_text_message(reply_token, f'⚠️ 很抱歉，{date} {time} 已被預約，請重新選擇時段。')
+            reply_text_message(reply_token, f' {date} {time} ')
             return
 
         customer = Customer.query.filter_by(line_user_id=user_id).first()
         if not customer:
-            # 未登記，先導向註冊
+            # 
             flex = build_register_flex(teacher_id, date, time)
-            reply_flex_message(reply_token, '請先完成註冊', flex)
+            reply_flex_message(reply_token, '', flex)
             return
 
         duration = 60
@@ -1005,7 +1005,7 @@ def handle_postback_event(reply_token, user_id, data):
         conv = AIConversation(
             line_user_id=user_id,
             user_message=f'Postback confirm: teacher={teacher_id} date={date} time={time}',
-            ai_response='預約成功',
+            ai_response='',
             intent='booking',
             booking_id=booking.id
         )
@@ -1013,33 +1013,33 @@ def handle_postback_event(reply_token, user_id, data):
         db.session.commit()
 
         send_admin_notification(
-            f'新預約！{booking.booking_number} | {customer.name} | {teacher.name} | {date} {time}'
+            f'{booking.booking_number} | {customer.name} | {teacher.name} | {date} {time}'
         )
 
         flex = build_booking_success_flex(booking)
-        reply_flex_message(reply_token, f'預約成功！{booking.booking_number}', flex)
+        reply_flex_message(reply_token, f'{booking.booking_number}', flex)
 
-    # 5. 取消預約
+    # 5. 
     elif action == 'cancel_booking':
         booking_id = int(params.get('booking_id', 0))
         booking = Booking.query.get(booking_id)
         if not booking or booking.line_user_id != user_id:
-            reply_text_message(reply_token, '找不到此預約或您無權取消。')
+            reply_text_message(reply_token, '')
             return
         booking.status = 'cancelled'
         db.session.commit()
         reply_text_message(
             reply_token,
-            f'✅ 已取消預約 {booking.booking_number}\n{booking.teacher.name} 老師 {booking.date} {booking.time}'
+            f'  {booking.booking_number}\n{booking.teacher.name}  {booking.date} {booking.time}'
         )
 
     else:
-        reply_text_message(reply_token, '未知操作，請重新選擇。')
+        reply_text_message(reply_token, '')
 
 
-# ─────────────────────────────────────────────
-# 公開 API（Web 端不變）
-# ─────────────────────────────────────────────
+# 
+#  APIWeb 
+# 
 
 @app.route('/')
 def index():
@@ -1075,7 +1075,7 @@ def create_booking():
     if not teacher:
         return jsonify({'error': 'Teacher not found'}), 404
     if not check_availability(teacher.id, data['date'], data['time']):
-        return jsonify({'error': '此時段已被預約'}), 400
+        return jsonify({'error': ''}), 400
     duration = data.get('duration', 60)
     total_price = int((duration / 60) * teacher.hourly_rate)
     booking = Booking(
@@ -1103,9 +1103,9 @@ def create_booking():
     return jsonify({'success': True, 'booking': booking.to_dict()}), 201
 
 
-# ─────────────────────────────────────────────
-# 管理後台 API（維持原有）
-# ─────────────────────────────────────────────
+# 
+#  API
+# 
 
 @app.route('/admin')
 def admin_login():
@@ -1149,7 +1149,7 @@ def admin_cancel_booking(bid):
     if booking.line_user_id:
         send_text_message(
             booking.line_user_id,
-            f'您的預約已取消\n\n預約編號：{booking.booking_number}\n老師：{booking.teacher.name}\n時間：{booking.date} {booking.time}'
+            f'\n\n{booking.booking_number}\n{booking.teacher.name}\n{booking.date} {booking.time}'
         )
     return jsonify({'success': True})
 
@@ -1218,50 +1218,50 @@ def admin_get_ai_conversations():
     } for c in convs])
 
 
-# ─────────────────────────────────────────────
-# 初始化範例資料
-# ─────────────────────────────────────────────
+# 
+# 
+# 
 
 def seed():
     if Teacher.query.count() > 0:
         return
     teachers_data = [
-        {'name': '陳志豪', 'title': '資深講師',
-         'specialty': '數位行銷、社群經營、品牌策略',
-         'bio': '10年業界經驗，曾任知名企業行銷總監', 'hourly_rate': 1500},
-        {'name': '林美慧', 'title': '專業顧問',
-         'specialty': '職涯規劃、履歷優化、面試技巧',
-         'bio': '人資背景，協助超過500位求職者成功轉職', 'hourly_rate': 1200},
-        {'name': '王俊傑', 'title': '技術專家',
-         'specialty': 'Python、資料分析、機器學習',
-         'bio': '科技業資深工程師，豐富教學經驗', 'hourly_rate': 1800},
-        {'name': '張雅婷', 'title': '語言教師',
-         'specialty': '英語教學、多益、商業英文',
-         'bio': '英國留學歸國，TESOL認證教師', 'hourly_rate': 1000}
+        {'name': '', 'title': '',
+         'specialty': '',
+         'bio': '10', 'hourly_rate': 1500},
+        {'name': '', 'title': '',
+         'specialty': '',
+         'bio': '500', 'hourly_rate': 1200},
+        {'name': '', 'title': '',
+         'specialty': 'Python',
+         'bio': '', 'hourly_rate': 1800},
+        {'name': '', 'title': '',
+         'specialty': '',
+         'bio': 'TESOL', 'hourly_rate': 1000}
     ]
     for data in teachers_data:
         db.session.add(Teacher(**data))
     db.session.commit()
-    print('範例老師資料建立完成')
+    print('')
 
 
 with app.app_context():
     try:
         db.create_all()
-        print('資料庫初始化完成')
+        print('')
         if Teacher.query.count() == 0:
             seed()
     except Exception as e:
-        print(f'資料庫初始化錯誤: {e}')
+        print(f': {e}')
 
 if __name__ == '__main__':
     os.makedirs('static', exist_ok=True)
     with app.app_context():
         db.create_all()
         seed()
-    print('\n  老師預約系統')
-    print('  學生預約頁面：http://localhost:5000')
-    print('  管理後台登入：http://localhost:5000/admin')
-    print(f'  管理密碼：    {ADMIN_PASSWORD}')
+    print('\n  ')
+    print('  http://localhost:5000')
+    print('  http://localhost:5000/admin')
+    print(f'      {ADMIN_PASSWORD}')
     print(f'  LINE Webhook: http://your-domain.com/webhook/line\n')
     app.run(debug=True, port=5000)
