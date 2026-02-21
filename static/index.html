@@ -351,11 +351,14 @@
             color: white;
         }
 
+        /* 已預約時段：明確標示不可選 */
         .time-slot.booked {
-            background: var(--background);
-            color: var(--border);
+            background: #f5f5f5;
+            color: #cccccc;
             cursor: not-allowed;
             text-decoration: line-through;
+            border-color: #eeeeee;
+            pointer-events: none;
         }
 
         .form-row {
@@ -497,10 +500,16 @@
             text-transform: uppercase;
         }
 
-        .book-btn:hover {
+        .book-btn:hover:not(:disabled) {
             background: var(--primary);
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(44, 24, 16, 0.15);
+        }
+
+        .book-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .notes-card {
@@ -536,6 +545,51 @@
             position: absolute;
             left: 0;
             color: var(--accent);
+        }
+
+        /* 時段圖例說明 */
+        .slot-legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border: 1px solid;
+        }
+
+        .legend-dot.available {
+            background: var(--card-bg);
+            border-color: var(--border);
+        }
+
+        .legend-dot.booked-dot {
+            background: #f5f5f5;
+            border-color: #eeeeee;
+        }
+
+        .legend-dot.selected-dot {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* 載入中動畫 */
+        .loading-slots {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+            font-size: 14px;
         }
 
         .modal {
@@ -693,26 +747,22 @@
 <div class="container">
     <div class="main-content">
         <div class="left-panel">
-            
+
             <div class="section-block">
                 <h2 class="section-title">選擇老師</h2>
                 <p class="section-subtitle">請選擇您想預約的專業老師</p>
-
-                <div class="teachers-grid" id="teachersGrid">
-                    <!-- 動態載入 -->
-                </div>
+                <div class="teachers-grid" id="teachersGrid"></div>
             </div>
 
             <div class="section-block" id="dateSection" style="display:none;">
                 <h2 class="section-title">選擇日期</h2>
                 <p class="section-subtitle">請選擇您想預約的日期</p>
-
                 <div class="calendar-section">
                     <div class="calendar-header">
                         <div style="display:flex;align-items:center;gap:20px;">
-                            <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+                            <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
                             <div class="current-month" id="currentMonth"></div>
-                            <button class="nav-btn" onclick="changeMonth(1)">›</button>
+                            <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
                         </div>
                     </div>
                     <div class="calendar-grid" id="calendarGrid"></div>
@@ -722,6 +772,22 @@
             <div class="section-block" id="timeSection" style="display:none;">
                 <h2 class="section-title">選擇時段</h2>
                 <p class="section-subtitle" id="selectedDateLabel"></p>
+
+                <!-- 圖例 -->
+                <div class="slot-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot available"></div>
+                        <span>可預約</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot booked-dot"></div>
+                        <span>已被預約</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot selected-dot"></div>
+                        <span>已選擇</span>
+                    </div>
+                </div>
 
                 <div class="time-slots-section">
                     <div class="time-period">
@@ -742,7 +808,6 @@
             <div class="section-block" id="formSection" style="display:none;">
                 <h2 class="section-title">聯絡資料</h2>
                 <p class="section-subtitle">請填寫您的聯絡資訊</p>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label>姓名</label>
@@ -766,7 +831,6 @@
         <div class="sidebar">
             <div class="summary-card">
                 <div class="summary-title">預約摘要</div>
-
                 <div class="summary-item">
                     <div class="summary-label">老師</div>
                     <div class="summary-value empty" id="sum-teacher">請選擇老師</div>
@@ -781,22 +845,20 @@
                 </div>
                 <div class="summary-item">
                     <div class="summary-label">課程時長</div>
-                    <div class="summary-value empty" id="sum-duration">60 分鐘</div>
+                    <div class="summary-value" id="sum-duration">60 分鐘</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-label">姓名</div>
                     <div class="summary-value empty" id="sum-name">請填寫資料</div>
                 </div>
-
                 <div class="summary-divider"></div>
-
                 <div class="summary-total">
                     <div class="label">費用</div>
                     <div class="price" id="sum-price">NT$ 0</div>
                 </div>
             </div>
 
-            <button class="book-btn" onclick="submitBooking()">確認預約</button>
+            <button class="book-btn" id="bookBtn" onclick="submitBooking()">確認預約</button>
 
             <div style="height:20px;"></div>
 
@@ -817,7 +879,7 @@
 
 <footer>
     <div class="container">
-        © 2026 老師預約系統 · 支援 LINE 智慧預約
+        &copy; 2026 老師預約系統 &middot; 支援 LINE 智慧預約
     </div>
 </footer>
 
@@ -825,7 +887,7 @@
     <div class="modal-content">
         <div class="confirm-icon">OK</div>
         <h2>預約成功！</h2>
-        <p>您的課程預約已確認<br>預約編號將以簡訊傳送至您的手機</p>
+        <p>您的課程預約已確認<br>請留意預約編號</p>
         <div class="confirm-details" id="confirmDetails"></div>
         <button class="confirm-btn" onclick="closeConfirm()">完成</button>
     </div>
@@ -847,27 +909,28 @@ const state = {
 
 let teachers = [];
 let currentDate = new Date();
-let availableTimes = [];
-let bookedTimes = [];
+let allTimes = [];    // 全部時段 09:00–20:00
+let bookedTimes = []; // 已被預約的時段
 
 const months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 const days = ['日','一','二','三','四','五','六'];
 
-// Load teachers
 async function loadTeachers() {
     try {
         const res = await fetch(`${API}/api/teachers`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         teachers = await res.json();
         renderTeachers();
     } catch (e) {
         console.error('載入老師失敗', e);
+        document.getElementById('teachersGrid').innerHTML = '<p style="color:red;">載入老師資料失敗，請重新整理頁面</p>';
     }
 }
 
 function renderTeachers() {
     const grid = document.getElementById('teachersGrid');
     grid.innerHTML = teachers.map(t => `
-        <div class="teacher-card" onclick="selectTeacher(${t.id}, '${t.name}', ${t.hourly_rate})">
+        <div class="teacher-card" onclick="selectTeacher(event, ${t.id}, '${t.name}', ${t.hourly_rate})">
             <div class="teacher-info">
                 <div class="teacher-name">${t.name}</div>
                 <div class="teacher-title">${t.title || '專業講師'}</div>
@@ -878,18 +941,28 @@ function renderTeachers() {
     `).join('');
 }
 
-function selectTeacher(id, name, rate) {
+function selectTeacher(e, id, name, rate) {
     state.teacherId = id;
     state.teacher = name;
     state.teacherRate = rate;
-    
+    state.date = null;
+    state.time = null;
+
     document.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
-    
+    e.currentTarget.classList.add('selected');
+
     document.getElementById('sum-teacher').textContent = name;
     document.getElementById('sum-teacher').classList.remove('empty');
-    
+
+    // 重置日期、時間摘要
+    document.getElementById('sum-date').textContent = '請選擇日期';
+    document.getElementById('sum-date').classList.add('empty');
+    document.getElementById('sum-time').textContent = '請選擇時間';
+    document.getElementById('sum-time').classList.add('empty');
+
     document.getElementById('dateSection').style.display = 'block';
+    document.getElementById('timeSection').style.display = 'none';
+    document.getElementById('formSection').style.display = 'none';
     updatePrice();
 }
 
@@ -897,31 +970,32 @@ function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     document.getElementById('currentMonth').textContent = `${year} 年 ${months[month]}`;
-    
+
     const grid = document.getElementById('calendarGrid');
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     let html = days.map(d => `<div class="calendar-day-header">${d}</div>`).join('');
-    
+
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const prevDays = new Date(year, month, 0).getDate();
-    
+
     for (let i = firstDay - 1; i >= 0; i--)
         html += `<div class="calendar-day other-month">${prevDays - i}</div>`;
-    
+
     for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(year, month, d);
         const isToday = date.toDateString() === today.toDateString();
-        const isPast = date < today && !isToday;
-        const classes = ['calendar-day', isToday?'today':'', isPast?'disabled':''].filter(Boolean).join(' ');
-        const onclick = !isPast ? `onclick="selectDate(${year},${month},${d})"` : '';
+        const isPast = date < today;
+        const classes = ['calendar-day', isToday ? 'today' : '', isPast ? 'disabled' : ''].filter(Boolean).join(' ');
+        const onclick = !isPast ? `onclick="selectDate(event, ${year}, ${month}, ${d})"` : '';
         html += `<div class="${classes}" ${onclick}>${d}</div>`;
     }
-    
+
     const rem = (7 - (firstDay + daysInMonth) % 7) % 7;
     for (let d = 1; d <= rem; d++)
         html += `<div class="calendar-day other-month">${d}</div>`;
-    
+
     grid.innerHTML = html;
 }
 
@@ -930,78 +1004,102 @@ function changeMonth(dir) {
     renderCalendar();
 }
 
-async function selectDate(year, month, day) {
+async function selectDate(e, year, month, day) {
+    if (!state.teacherId) {
+        alert('請先選擇老師');
+        return;
+    }
+
     document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
-    
+    e.currentTarget.classList.add('selected');
+
     const d = new Date(year, month, day);
-    state.date = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    state.date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    state.time = null;
+
     const weekdays = ['日','一','二','三','四','五','六'];
-    
-    document.getElementById('sum-date').textContent = state.date + ' 週' + weekdays[d.getDay()];
+    document.getElementById('sum-date').textContent = `${state.date} 週${weekdays[d.getDay()]}`;
     document.getElementById('sum-date').classList.remove('empty');
+    document.getElementById('sum-time').textContent = '請選擇時間';
+    document.getElementById('sum-time').classList.add('empty');
     document.getElementById('selectedDateLabel').textContent = `${state.date} 週${weekdays[d.getDay()]} 可預約時段`;
-    
-    // Load available times
-    await loadAvailableTimes();
-    
+
+    // 顯示載入中
     document.getElementById('timeSection').style.display = 'block';
     document.getElementById('formSection').style.display = 'block';
+    ['morningSlots', 'afternoonSlots', 'eveningSlots'].forEach(id => {
+        document.getElementById(id).innerHTML = '<div class="loading-slots">載入中...</div>';
+    });
+
+    await loadAvailableTimes();
 }
 
 async function loadAvailableTimes() {
     try {
         const res = await fetch(`${API}/api/teachers/${state.teacherId}/availability?date=${state.date}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        
-        availableTimes = data.available_times;
-        bookedTimes = data.booked_times;
-        
+
+        // 後端回傳 available_times（可預約）和 booked_times（已預約）
+        // 顯示全部時段，但已預約的標為 booked
+        bookedTimes = data.booked_times || [];
+        allTimes = [...(data.available_times || []), ...bookedTimes].sort();
+
         renderTimeSlots();
     } catch (e) {
         console.error('載入可用時段失敗', e);
+        ['morningSlots', 'afternoonSlots', 'eveningSlots'].forEach(id => {
+            document.getElementById(id).innerHTML = '<div class="loading-slots" style="color:red;">載入失敗，請重試</div>';
+        });
     }
 }
 
 function renderTimeSlots() {
-    const morning = availableTimes.filter(t => parseInt(t.split(':')[0]) < 12);
-    const afternoon = availableTimes.filter(t => {
-        const h = parseInt(t.split(':')[0]);
-        return h >= 12 && h < 18;
-    });
-    const evening = availableTimes.filter(t => parseInt(t.split(':')[0]) >= 18);
-    
-    document.getElementById('morningSlots').innerHTML = morning.map(t => 
-        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
-    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
-    
-    document.getElementById('afternoonSlots').innerHTML = afternoon.map(t => 
-        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
-    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
-    
-    document.getElementById('eveningSlots').innerHTML = evening.map(t => 
-        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
-    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
+    const ALL_HOURS = Array.from({ length: 12 }, (_, i) => `${String(i + 9).padStart(2, '0')}:00`);
+
+    function makeSlots(times) {
+        if (times.length === 0) {
+            return '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:8px;">無可用時段</div>';
+        }
+        return times.map(t => {
+            const isBooked = bookedTimes.includes(t);
+            if (isBooked) {
+                return `<div class="time-slot booked" title="此時段已被預約">${t}<br><small style="font-size:10px;">已預約</small></div>`;
+            }
+            return `<div class="time-slot" onclick="selectTime(event, '${t}')">${t}</div>`;
+        }).join('');
+    }
+
+    const morning   = ALL_HOURS.filter(t => parseInt(t) < 12);
+    const afternoon = ALL_HOURS.filter(t => { const h = parseInt(t); return h >= 12 && h < 18; });
+    const evening   = ALL_HOURS.filter(t => parseInt(t) >= 18);
+
+    document.getElementById('morningSlots').innerHTML   = makeSlots(morning);
+    document.getElementById('afternoonSlots').innerHTML = makeSlots(afternoon);
+    document.getElementById('eveningSlots').innerHTML   = makeSlots(evening);
 }
 
-function selectTime(time) {
-    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+function selectTime(e, time) {
+    document.querySelectorAll('.time-slot:not(.booked)').forEach(s => s.classList.remove('selected'));
+    e.currentTarget.classList.add('selected');
     state.time = time;
-    
+
     document.getElementById('sum-time').textContent = time;
     document.getElementById('sum-time').classList.remove('empty');
     updatePrice();
 }
 
 function updateSummary() {
-    const name = document.getElementById('customerName').value;
-    const phone = document.getElementById('customerPhone').value;
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    state.name = name;
+    state.phone = phone;
     if (name) {
-        state.name = name;
-        state.phone = phone;
         document.getElementById('sum-name').textContent = name + (phone ? ` · ${phone}` : '');
         document.getElementById('sum-name').classList.remove('empty');
+    } else {
+        document.getElementById('sum-name').textContent = '請填寫資料';
+        document.getElementById('sum-name').classList.add('empty');
     }
 }
 
@@ -1013,37 +1111,57 @@ function updatePrice() {
 }
 
 async function submitBooking() {
-    if (!state.teacherId || !state.date || !state.time || !state.name || !state.phone) {
-        alert('請完整填寫預約資訊');
-        return;
-    }
-    
+    if (!state.teacherId) { alert('請選擇老師'); return; }
+    if (!state.date)      { alert('請選擇日期'); return; }
+    if (!state.time)      { alert('請選擇時段'); return; }
+
+    const name  = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    if (!name)  { alert('請填寫姓名'); return; }
+    if (!phone) { alert('請填寫手機號碼'); return; }
+
+    const btn = document.getElementById('bookBtn');
+    btn.disabled = true;
+    btn.textContent = '預約中...';
+
     const data = {
         teacher_id: state.teacherId,
         date: state.date,
         time: state.time,
         duration: state.duration,
-        name: state.name,
-        phone: state.phone,
+        name,
+        phone,
         note: document.getElementById('note').value
     };
-    
+
     try {
         const res = await fetch(`${API}/api/book`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        
+
+        // 先檢查 Content-Type，避免把 HTML 錯誤當 JSON 解析
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error(`伺服器回傳非預期格式（HTTP ${res.status}），請稍後再試`);
+        }
+
+        const result = await res.json();
+
         if (res.ok) {
-            const result = await res.json();
             showConfirmation(result.booking);
+            // 預約成功後把該時段標為已預約
+            bookedTimes.push(state.time);
+            renderTimeSlots();
         } else {
-            const error = await res.json();
-            alert(error.error || '預約失敗');
+            alert(result.error || '預約失敗，請重試');
         }
     } catch (e) {
         alert('預約失敗：' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '確認預約';
     }
 }
 
@@ -1057,11 +1175,11 @@ function showConfirmation(booking) {
         ['姓名', state.name],
         ['費用', `NT$ ${state.price.toLocaleString()}`]
     ];
-    
+
     document.getElementById('confirmDetails').innerHTML = details
-        .map(([k,v]) => `<div class="confirm-detail-item"><span class="key">${k}</span><span class="val">${v}</span></div>`)
+        .map(([k, v]) => `<div class="confirm-detail-item"><span class="key">${k}</span><span class="val">${v}</span></div>`)
         .join('');
-    
+
     document.getElementById('confirmModal').classList.add('active');
 }
 
