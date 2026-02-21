@@ -3,6 +3,7 @@ import os
 import hmac
 import hashlib
 import json
+import base64
 import requests
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory, session
@@ -232,19 +233,17 @@ def find_teacher_by_name(name):
 
 def check_availability(teacher_id, date, time):
     """檢查時段是否可預約"""
-    # 檢查是否已被預約
     existing = Booking.query.filter(
         Booking.teacher_id == teacher_id,
         Booking.date == date,
         Booking.time == time,
         Booking.status == 'confirmed'
     ).first()
-    
     return existing is None
 
 
 def send_line_message(user_id, message):
-    """發送 LINE 訊息"""
+    """主動發送 LINE 訊息（Push API）"""
     if not LINE_CHANNEL_ACCESS_TOKEN:
         return False
     
@@ -259,9 +258,35 @@ def send_line_message(user_id, message):
     }
     
     try:
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(url, headers=headers, json=data, timeout=10)
         return response.status_code == 200
-    except:
+    except Exception as e:
+        print(f'LINE Push 發送失敗: {e}')
+        return False
+
+
+def reply_line_message(reply_token, message):
+    """Webhook 回覆 LINE 訊息（Reply API）"""
+    if not LINE_CHANNEL_ACCESS_TOKEN:
+        return False
+    
+    url = 'https://api.line.me/v2/bot/message/reply'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'
+    }
+    data = {
+        'replyToken': reply_token,
+        'messages': [{'type': 'text', 'text': message}]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        if response.status_code != 200:
+            print(f'LINE Reply 失敗: {response.status_code} {response.text}')
+        return response.status_code == 200
+    except Exception as e:
+        print(f'LINE Reply 發送失敗: {e}')
         return False
 
 
@@ -296,7 +321,6 @@ def check_teacher_availability(teacher_id):
     if not date:
         return jsonify({'error': 'Missing date'}), 400
     
-    # 取得該日期已預約的時段
     booked = Booking.query.filter(
         Booking.teacher_id == teacher_id,
         Booking.date == date,
@@ -304,8 +328,6 @@ def check_teacher_availability(teacher_id):
     ).all()
     
     booked_times = [b.time for b in booked]
-    
-    # 預設可預約時段
     all_times = [f'{h:02d}:00' for h in range(9, 21)]  # 09:00 - 20:00
     available_times = [t for t in all_times if t not in booked_times]
     
@@ -324,15 +346,12 @@ def create_booking():
     if not teacher:
         return jsonify({'error': 'Teacher not found'}), 404
     
-    # 檢查可用性
     if not check_availability(teacher.id, data['date'], data['time']):
         return jsonify({'error': '此時段已被預約'}), 400
     
-    # 計算費用
     duration = data.get('duration', 60)
     total_price = int((duration / 60) * teacher.hourly_rate)
     
-    # 建立預約
     booking = Booking(
         booking_number=generate_booking_number(),
         teacher_id=teacher.id,
@@ -349,7 +368,6 @@ def create_booking():
     db.session.add(booking)
     db.session.commit()
     
-    # 更新客戶資料
     customer = Customer.query.filter_by(phone=data['phone']).first()
     if not customer:
         customer = Customer(
@@ -378,48 +396,68 @@ def line_webhook():
     """LINE Webhook - AI 自動預約"""
     signature = request.headers.get('X-Line-Signature', '')
     body = request.get_data(as_text=True)
-    
-    # 驗證簽章
+
+    # 驗證簽章（LINE 使用 Base64）
     if LINE_CHANNEL_SECRET:
         hash_value = hmac.new(
             LINE_CHANNEL_SECRET.encode('utf-8'),
             body.encode('utf-8'),
             hashlib.sha256
         ).digest()
-        expected_signature = hash_value.hex()
-        
+        expected_signature = base64.b64encode(hash_value).decode('utf-8')
+
         if signature != expected_signature:
+            print('LINE 簽章驗證失敗')
             return 'Invalid signature', 403
     
     try:
-        events = json.loads(body).get('events', [])
-    except:
+        payload = json.loads(body) if body else {}
+        events = payload.get('events', [])
+    except Exception as e:
+        print(f'LINE Webhook JSON 解析失敗: {e}')
+        return 'OK', 200
+    
+    # LINE Verify / Ping 可能沒有 events
+    if not events:
         return 'OK', 200
     
     for event in events:
-        if event['type'] != 'message' or event['message']['type'] != 'text':
+        try:
+            if event.get('type') != 'message':
+                continue
+            if event.get('message', {}).get('type') != 'text':
+                continue
+
+            reply_token = event.get('replyToken')
+            user_id = event.get('source', {}).get('userId')
+            message = event.get('message', {}).get('text', '').strip()
+
+            if not user_id or not message:
+                continue
+
+            parsed = parse_booking_message(message)
+
+            if not parsed['is_booking']:
+                reply = handle_general_query(message, user_id)
+            else:
+                reply = handle_booking_request(parsed, user_id, message)
+
+            # Webhook 回覆優先使用 Reply API
+            if reply_token:
+                ok = reply_line_message(reply_token, reply)
+                if not ok:
+                    print('Reply API 失敗，嘗試 Push API')
+                    send_line_message(user_id, reply)
+
+        except Exception as e:
+            print(f'處理 LINE event 失敗: {e}')
             continue
-        
-        user_id = event['source']['userId']
-        message = event['message']['text']
-        
-        # 解析訊息
-        parsed = parse_booking_message(message)
-        
-        if not parsed['is_booking']:
-            reply = handle_general_query(message, user_id)
-        else:
-            reply = handle_booking_request(parsed, user_id, message)
-        
-        # 回覆訊息
-        send_line_message(user_id, reply)
     
     return 'OK', 200
 
 
 def handle_general_query(message, user_id):
     """處理一般查詢"""
-    # 查詢預約
     if '查詢' in message or '我的預約' in message:
         bookings = Booking.query.filter_by(
             line_user_id=user_id,
@@ -432,10 +470,8 @@ def handle_general_query(message, user_id):
         reply = '您的預約記錄：\n\n'
         for b in bookings:
             reply += f'{b.booking_number}\n{b.teacher.name} 老師\n{b.date} {b.time}\n費用：{b.total_price}元\n\n'
-        
         return reply
     
-    # 老師列表
     if '老師' in message and ('有哪些' in message or '名單' in message):
         teachers = Teacher.query.filter_by(is_active=True).all()
         reply = '目前可預約的老師：\n\n'
@@ -443,13 +479,11 @@ def handle_general_query(message, user_id):
             reply += f'{t.name} 老師\n{t.title}\n專長：{t.specialty}\n\n'
         return reply
     
-    # 預設回覆
     return '您好！\n\n可用指令：\n1. 預約 老師名字 日期 時間\n   例：預約 陳老師 2/20 15:00\n\n2. 查詢預約\n\n3. 老師名單'
 
 
 def handle_booking_request(parsed, user_id, original_message):
     """處理預約請求"""
-    # 驗證必要資訊
     if not parsed['teacher_name']:
         return '請提供老師名字，例如：預約 陳老師 2/20 15:00'
     
@@ -459,30 +493,26 @@ def handle_booking_request(parsed, user_id, original_message):
     if not parsed['time']:
         return '請提供預約時間，例如：15:00 或 下午3點'
     
-    # 驗證日期
     try:
         booking_date = datetime.strptime(parsed['date'], '%Y-%m-%d')
         if booking_date.date() < datetime.now().date():
             return '無法預約過去的日期。'
-    except:
+    except Exception:
         return '日期格式錯誤。'
     
-    # 尋找老師
     teacher = find_teacher_by_name(parsed['teacher_name'])
     if not teacher:
         return f'找不到「{parsed["teacher_name"]}」老師。\n\n請傳送「老師名單」查看可預約的老師。'
     
-    # 檢查可用性
     if not check_availability(teacher.id, parsed['date'], parsed['time']):
         return f'{teacher.name} 老師在 {parsed["date"]} {parsed["time"]} 已被預約。\n\n請選擇其他時間或傳送「查詢可用時段」。'
     
-    # 取得客戶資料
     customer = Customer.query.filter_by(line_user_id=user_id).first()
     
     if not customer:
+        # 這裡目前是簡化版：先提示使用者提供資料（尚未實作「確認預約 姓名 電話」解析）
         return f'已為您保留 {teacher.name} 老師的時段！\n\n請提供您的姓名和電話以完成預約：\n確認預約 張三 0912345678'
     
-    # 建立預約
     duration = 60
     total_price = int((duration / 60) * teacher.hourly_rate)
     
@@ -501,14 +531,12 @@ def handle_booking_request(parsed, user_id, original_message):
     
     db.session.add(booking)
     
-    # 更新客戶統計
     customer.total_bookings += 1
     customer.total_hours += duration
     customer.total_spent += total_price
     
     db.session.commit()
     
-    # 記錄 AI 對話
     conversation = AIConversation(
         line_user_id=user_id,
         user_message=original_message,
@@ -519,12 +547,25 @@ def handle_booking_request(parsed, user_id, original_message):
     db.session.add(conversation)
     db.session.commit()
     
-    # 發送通知給管理員
-    admin_msg = f'新預約通知\n\n預約編號：{booking.booking_number}\n客戶：{customer.name}\n老師：{teacher.name}\n時間：{parsed["date"]} {parsed["time"]}\n來源：LINE AI'
+    admin_msg = (
+        f'新預約通知\n\n'
+        f'預約編號：{booking.booking_number}\n'
+        f'客戶：{customer.name}\n'
+        f'老師：{teacher.name}\n'
+        f'時間：{parsed["date"]} {parsed["time"]}\n'
+        f'來源：LINE AI'
+    )
     send_admin_notification(admin_msg)
     
-    # 回覆客戶
-    return f'預約成功！\n\n預約編號：{booking.booking_number}\n老師：{teacher.name}\n時間：{parsed["date"]} {parsed["time"]}\n課程時長：{duration}分鐘\n費用：{total_price}元\n\n請準時出席，期待您的到來！'
+    return (
+        f'預約成功！\n\n'
+        f'預約編號：{booking.booking_number}\n'
+        f'老師：{teacher.name}\n'
+        f'時間：{parsed["date"]} {parsed["time"]}\n'
+        f'課程時長：{duration}分鐘\n'
+        f'費用：{total_price}元\n\n'
+        f'請準時出席，期待您的到來！'
+    )
 
 
 # ─────────────────────────────────────────────
@@ -556,7 +597,8 @@ def dashboard():
 @app.route('/admin/api/bookings', methods=['GET'])
 def admin_get_bookings():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     date = request.args.get('date')
     status = request.args.get('status')
@@ -574,7 +616,8 @@ def admin_get_bookings():
 @app.route('/admin/api/bookings/<int:bid>/cancel', methods=['POST'])
 def admin_cancel_booking(bid):
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     booking = Booking.query.get_or_404(bid)
     booking.status = 'cancelled'
@@ -590,7 +633,8 @@ def admin_cancel_booking(bid):
 @app.route('/admin/api/teachers', methods=['GET'])
 def admin_get_teachers():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     teachers = Teacher.query.all()
     return jsonify([t.to_dict() for t in teachers])
@@ -599,7 +643,8 @@ def admin_get_teachers():
 @app.route('/admin/api/teachers', methods=['POST'])
 def admin_add_teacher():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     data = request.get_json()
     teacher = Teacher(
@@ -619,7 +664,8 @@ def admin_add_teacher():
 @app.route('/admin/api/customers', methods=['GET'])
 def admin_get_customers():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     customers = Customer.query.order_by(Customer.total_spent.desc()).all()
     return jsonify([{
@@ -637,7 +683,8 @@ def admin_get_customers():
 @app.route('/admin/api/stats', methods=['GET'])
 def admin_get_stats():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     today = datetime.now().strftime('%Y-%m-%d')
     
@@ -656,7 +703,8 @@ def admin_get_stats():
 @app.route('/admin/api/ai-conversations', methods=['GET'])
 def admin_get_ai_conversations():
     err = check_admin()
-    if err: return err
+    if err:
+        return err
     
     conversations = AIConversation.query.order_by(AIConversation.created_at.desc()).limit(100).all()
     
