@@ -211,8 +211,14 @@ def send_booking_email(to_email, customer_name, booking):
 
         print(f'Email 發送成功: {to_email}')
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        print(f'Email 認證失敗（帳號或應用程式密碼錯誤）: {e}')
+        return False
+    except smtplib.SMTPException as e:
+        print(f'SMTP 錯誤: {e}')
+        return False
     except Exception as e:
-        print(f'Email 發送失敗: {e}')
+        print(f'Email 發送失敗: {type(e).__name__}: {e}')
         return False
 
 
@@ -796,10 +802,10 @@ def build_booking_success_flex(booking):
             "spacing": "md",
             "contents": [
                 _info_row("老師", f"{teacher_name} 老師"),
-                _info_row(" ", f"{d_fmt} ({weekday})"),
-                _info_row(" ", booking.time),
+                _info_row("日期", f"{d_fmt} (週{weekday})"),
+                _info_row("時間", booking.time),
                 _info_row("時長", f"{booking.duration} 分鐘"),
-                _info_row(" ", f"$ {booking.total_price} "),
+                _info_row("費用", f"NT$ {booking.total_price} 元"),
                 {
                     "type": "separator",
                     "margin": "md"
@@ -1150,7 +1156,7 @@ def handle_postback_event(reply_token, user_id, data):
         conv = AIConversation(
             line_user_id=user_id,
             user_message=f'Postback confirm: teacher={teacher_id} date={date} time={time}',
-            ai_response='',
+            ai_response='預約成功',
             intent='booking',
             booking_id=booking.id
         )
