@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import hmac
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import hashlib
 import json
 import base64
@@ -27,6 +24,7 @@ LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
 LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
 MAIL_USER = os.environ.get('MAIL_USER', '')
 MAIL_PASS = os.environ.get('MAIL_PASS', '')
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
 
 # 
 # 
@@ -137,52 +135,21 @@ class AIConversation(db.Model):
 # 
 
 
-def send_booking_email(to_email, customer_name, booking):
-    """發送預約確認 Email"""
-    if not MAIL_USER or not MAIL_PASS or not to_email:
-        print(f'Email 未設定或無收件地址，略過')
-        return False
-
-    teacher_name = booking.teacher.name if booking.teacher else ''
-
-    subject = f'【K書中心】預約確認 - {booking.booking_number}'
-
-    html = f"""
+def _build_email_html(title, customer_name, rows, footer_note=''):
+    """共用 HTML 模板"""
+    rows_html = ''.join(f"""
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;width:35%;">{k}</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{v}</td>
+          </tr>""" for k, v in rows)
+    return f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#FAF8F5;">
       <div style="background:#2C1810;padding:24px;text-align:center;">
-        <h1 style="color:#ffffff;margin:0;font-size:24px;">K書中心預約確認</h1>
+        <h1 style="color:#ffffff;margin:0;font-size:24px;">{title}</h1>
       </div>
       <div style="background:#ffffff;padding:32px;border:1px solid #E8E3DB;">
         <p style="font-size:16px;color:#1A1A1A;">親愛的 {customer_name}，您好！</p>
-        <p style="color:#6B6B6B;">您的課程預約已成功確認，詳細資訊如下：</p>
-
-        <table style="width:100%;border-collapse:collapse;margin:24px 0;">
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;width:35%;">預約編號</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.booking_number}</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">老師</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{teacher_name} 老師</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">日期</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.date}</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">時間</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.time}</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">課程時長</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.duration} 分鐘</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">費用</td>
-            <td style="padding:12px 8px;color:#D4704A;font-weight:700;font-size:18px;">NT$ {booking.total_price:,}</td>
-          </tr>
-        </table>
-
+        <table style="width:100%;border-collapse:collapse;margin:24px 0;">{rows_html}</table>
         <div style="background:#FAF8F5;border:1px solid #E8E3DB;padding:16px;margin-top:8px;">
           <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#2C1810;">注意事項</p>
           <ul style="margin:0;padding-left:16px;color:#6B6B6B;font-size:13px;line-height:2;">
@@ -190,94 +157,88 @@ def send_booking_email(to_email, customer_name, booking):
             <li>取消或更改請提前 24 小時通知</li>
             <li>遲到超過 15 分鐘視同放棄</li>
           </ul>
+          {f'<p style="margin-top:8px;color:#E05A2B;font-size:13px;">{footer_note}</p>' if footer_note else ''}
         </div>
       </div>
       <div style="text-align:center;padding:16px;color:#6B6B6B;font-size:12px;">
         K書中心 &copy; 2026 · 此為系統自動發送，請勿回覆
       </div>
-    </div>
-    """
+    </div>"""
 
+
+def _send_via_sendgrid(to_email, subject, html):
+    """透過 SendGrid API 發送 Email（Render 免費方案可用）"""
+    if not SENDGRID_API_KEY:
+        return False, 'SENDGRID_API_KEY 未設定'
+    if not MAIL_USER:
+        return False, 'MAIL_USER（寄件人）未設定'
+    payload = {
+        'personalizations': [{'to': [{'email': to_email}]}],
+        'from': {'email': MAIL_USER},
+        'subject': subject,
+        'content': [{'type': 'text/html', 'value': html}]
+    }
     try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = MAIL_USER
-        msg['To'] = to_email
-        msg.attach(MIMEText(html, 'html', 'utf-8'))
-
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as smtp:
-            smtp.login(MAIL_USER, MAIL_PASS)
-            smtp.send_message(msg)
-
-        print(f'Email 發送成功: {to_email}')
-        return True
-    except smtplib.SMTPAuthenticationError as e:
-        print(f'Email 認證失敗（帳號或應用程式密碼錯誤）: {e}')
-        return False
-    except smtplib.SMTPException as e:
-        print(f'SMTP 錯誤: {e}')
-        return False
+        r = requests.post(
+            'https://api.sendgrid.com/v3/mail/send',
+            headers={
+                'Authorization': f'Bearer {SENDGRID_API_KEY}',
+                'Content-Type': 'application/json'
+            },
+            json=payload,
+            timeout=15
+        )
+        if r.status_code in (200, 202):
+            return True, 'OK'
+        else:
+            return False, f'SendGrid HTTP {r.status_code}: {r.text}'
     except Exception as e:
-        print(f'Email 發送失敗: {type(e).__name__}: {e}')
+        return False, str(e)
+
+
+def send_booking_email(to_email, customer_name, booking):
+    """發送預約確認 Email（SendGrid）"""
+    if not to_email:
         return False
+    teacher_name = booking.teacher.name if booking.teacher else ''
+    subject = f'【K書中心】預約確認 - {booking.booking_number}'
+    rows = [
+        ('預約編號', booking.booking_number),
+        ('老師', f'{teacher_name} 老師'),
+        ('日期', booking.date),
+        ('時間', booking.time),
+        ('課程時長', f'{booking.duration} 分鐘'),
+        ('費用', f'NT$ {booking.total_price:,}'),
+    ]
+    html = _build_email_html('K書中心預約確認', customer_name, rows)
+    ok, msg = _send_via_sendgrid(to_email, subject, html)
+    if ok:
+        print(f'Email 發送成功: {to_email}')
+    else:
+        print(f'Email 發送失敗: {msg}')
+    return ok
 
 
 def send_cancel_email(to_email, customer_name, booking):
-    """發送取消通知 Email"""
-    if not MAIL_USER or not MAIL_PASS or not to_email:
+    """發送取消通知 Email（SendGrid）"""
+    if not to_email:
         return False
-
     teacher_name = booking.teacher.name if booking.teacher else ''
     subject = f'【K書中心】預約取消通知 - {booking.booking_number}'
-
-    html = f"""
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#FAF8F5;">
-      <div style="background:#2C1810;padding:24px;text-align:center;">
-        <h1 style="color:#ffffff;margin:0;font-size:24px;">K書中心預約取消通知</h1>
-      </div>
-      <div style="background:#ffffff;padding:32px;border:1px solid #E8E3DB;">
-        <p style="font-size:16px;color:#1A1A1A;">親愛的 {customer_name}，您好！</p>
-        <p style="color:#6B6B6B;">您的以下預約已被取消：</p>
-        <table style="width:100%;border-collapse:collapse;margin:24px 0;">
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;width:35%;">預約編號</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.booking_number}</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">老師</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{teacher_name} 老師</td>
-          </tr>
-          <tr style="border-bottom:1px solid #E8E3DB;">
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">日期</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.date}</td>
-          </tr>
-          <tr>
-            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">時間</td>
-            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.time}</td>
-          </tr>
-        </table>
-        <p style="color:#6B6B6B;font-size:14px;">如有疑問請透過 LINE 與我們聯繫，歡迎重新預約。</p>
-      </div>
-      <div style="text-align:center;padding:16px;color:#6B6B6B;font-size:12px;">
-        K書中心 &copy; 2026 · 此為系統自動發送，請勿回覆
-      </div>
-    </div>
-    """
-
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = MAIL_USER
-        msg['To'] = to_email
-        msg.attach(MIMEText(html, 'html', 'utf-8'))
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as smtp:
-            smtp.login(MAIL_USER, MAIL_PASS)
-            smtp.send_message(msg)
+    rows = [
+        ('預約編號', booking.booking_number),
+        ('老師', f'{teacher_name} 老師'),
+        ('日期', booking.date),
+        ('時間', booking.time),
+    ]
+    html = _build_email_html('K書中心預約取消通知', customer_name, rows,
+                             footer_note='如需重新預約請透過 LINE 或網頁操作。')
+    ok, msg = _send_via_sendgrid(to_email, subject, html)
+    if ok:
         print(f'取消 Email 發送成功: {to_email}')
-        return True
-    except Exception as e:
-        print(f'取消 Email 發送失敗: {e}')
-        return False
+    else:
+        print(f'取消 Email 發送失敗: {msg}')
+    return ok
 
 
 
@@ -917,7 +878,7 @@ def build_my_bookings_flex(bookings):
 
 
 def build_register_flex(teacher_id, date, time):
-    """"""
+    """註冊卡片 - 提供快速輸入按鈕"""
     return {
         "type": "bubble",
         "size": "mega",
@@ -925,9 +886,9 @@ def build_register_flex(teacher_id, date, time):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "完成註冊", "weight": "bold",
-                 "size": "xl", "color": "#ffffff"},
-                {"type": "text", "text": "首次預約，請提供基本資料",
+                {"type": "text", "text": "首次預約，請先完成註冊",
+                 "weight": "bold", "size": "lg", "color": "#ffffff"},
+                {"type": "text", "text": "只需要姓名和手機號碼",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#8E44AD",
@@ -940,10 +901,47 @@ def build_register_flex(teacher_id, date, time):
             "contents": [
                 {
                     "type": "text",
-                    "text": "請回覆以下格式：\n\n註冊 姓名 手機號碼\n\n範例：\n註冊 張小明 0912345678",
+                    "text": "點選下方按鈕，修改成您的真實姓名和手機號碼後送出即可完成註冊。",
                     "wrap": True,
                     "size": "sm",
                     "color": "#555555"
+                },
+                {
+                    "type": "text",
+                    "text": "格式：  註冊 姓名 手機號碼",
+                    "wrap": True,
+                    "size": "sm",
+                    "color": "#8E44AD",
+                    "weight": "bold",
+                    "margin": "sm"
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "color": "#8E44AD",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": "點此輸入註冊資料",
+                        "uri": f"https://line.me/R/oaMessage/@?%E8%A8%BB%E5%86%8A%20%E6%82%A8%E7%9A%84%E5%A7%93%E5%90%8D%200912345678"
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "secondary",
+                    "height": "sm",
+                    "action": {
+                        "type": "clipboard",
+                        "label": "複製格式範例",
+                        "clipboardText": "註冊 張小明 0912345678"
+                    }
                 }
             ]
         }
