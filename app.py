@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import hmac
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import hashlib
 import json
 import base64
@@ -22,6 +25,8 @@ db = SQLAlchemy(app)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN', '')
 LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
+MAIL_USER = os.environ.get('MAIL_USER', '')
+MAIL_PASS = os.environ.get('MAIL_PASS', '')
 
 # 
 # 
@@ -130,6 +135,86 @@ class AIConversation(db.Model):
 # 
 # 
 # 
+
+
+def send_booking_email(to_email, customer_name, booking):
+    """發送預約確認 Email"""
+    if not MAIL_USER or not MAIL_PASS or not to_email:
+        print(f'Email 未設定或無收件地址，略過')
+        return False
+
+    teacher_name = booking.teacher.name if booking.teacher else ''
+
+    subject = f'【K書中心】預約確認 - {booking.booking_number}'
+
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#FAF8F5;">
+      <div style="background:#2C1810;padding:24px;text-align:center;">
+        <h1 style="color:#ffffff;margin:0;font-size:24px;">K書中心預約確認</h1>
+      </div>
+      <div style="background:#ffffff;padding:32px;border:1px solid #E8E3DB;">
+        <p style="font-size:16px;color:#1A1A1A;">親愛的 {customer_name}，您好！</p>
+        <p style="color:#6B6B6B;">您的課程預約已成功確認，詳細資訊如下：</p>
+
+        <table style="width:100%;border-collapse:collapse;margin:24px 0;">
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;width:35%;">預約編號</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.booking_number}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">老師</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{teacher_name} 老師</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">日期</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.date}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">時間</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.time}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">課程時長</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.duration} 分鐘</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">費用</td>
+            <td style="padding:12px 8px;color:#D4704A;font-weight:700;font-size:18px;">NT$ {booking.total_price:,}</td>
+          </tr>
+        </table>
+
+        <div style="background:#FAF8F5;border:1px solid #E8E3DB;padding:16px;margin-top:8px;">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#2C1810;">注意事項</p>
+          <ul style="margin:0;padding-left:16px;color:#6B6B6B;font-size:13px;line-height:2;">
+            <li>請提前 10 分鐘到場準備</li>
+            <li>取消或更改請提前 24 小時通知</li>
+            <li>遲到超過 15 分鐘視同放棄</li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align:center;padding:16px;color:#6B6B6B;font-size:12px;">
+        K書中心 &copy; 2026 · 此為系統自動發送，請勿回覆
+      </div>
+    </div>
+    """
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = MAIL_USER
+        msg['To'] = to_email
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as smtp:
+            smtp.login(MAIL_USER, MAIL_PASS)
+            smtp.send_message(msg)
+
+        print(f'Email 發送成功: {to_email}')
+        return True
+    except Exception as e:
+        print(f'Email 發送失敗: {e}')
+        return False
+
 
 def check_admin():
     pw = request.headers.get('X-Admin-Password')
@@ -1093,15 +1178,24 @@ def create_booking():
     )
     db.session.add(booking)
     db.session.commit()
+    email = data.get('email', '').strip()
     customer = Customer.query.filter_by(phone=data['phone']).first()
     if not customer:
-        customer = Customer(name=data['name'], phone=data['phone'])
+        customer = Customer(name=data['name'], phone=data['phone'], email=email)
         db.session.add(customer)
         db.session.flush()  # 確保 customer 有 id，避免 NoneType 錯誤
+    else:
+        if email and not customer.email:
+            customer.email = email
     customer.total_bookings += 1
     customer.total_hours += duration
     customer.total_spent += total_price
     db.session.commit()
+
+    # 重新查詢 booking 以載入 teacher 關聯
+    booking = Booking.query.get(booking.id)
+    send_booking_email(email, data['name'], booking)
+
     return jsonify({'success': True, 'booking': booking.to_dict()}), 201
 
 

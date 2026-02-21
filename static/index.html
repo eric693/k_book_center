@@ -820,6 +820,12 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group full">
+                        <label>Email <span style="color:var(--accent);font-size:11px;font-weight:400;">預約確認信將寄送至此信箱</span></label>
+                        <input type="email" id="customerEmail" placeholder="example@gmail.com">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full">
                         <label>備註</label>
                         <textarea id="note" placeholder="有任何特殊需求嗎？（選填）"></textarea>
                     </div>
@@ -1119,11 +1125,16 @@ async function submitBooking() {
     const phone = document.getElementById('customerPhone').value.trim();
     if (!name)  { alert('請填寫姓名'); return; }
     if (!phone) { alert('請填寫手機號碼'); return; }
+    const emailVal = document.getElementById('customerEmail').value.trim();
+    if (!emailVal) {
+        if (!confirm('您未填寫 Email，將無法收到預約確認信。確定繼續？')) return;
+    }
 
     const btn = document.getElementById('bookBtn');
     btn.disabled = true;
     btn.textContent = '預約中...';
 
+    const email = document.getElementById('customerEmail').value.trim();
     const data = {
         teacher_id: state.teacherId,
         date: state.date,
@@ -1131,6 +1142,7 @@ async function submitBooking() {
         duration: state.duration,
         name,
         phone,
+        email,
         note: document.getElementById('note').value
     };
 
@@ -1166,6 +1178,7 @@ async function submitBooking() {
 }
 
 function showConfirmation(booking) {
+    const emailShown = document.getElementById('customerEmail').value.trim();
     const details = [
         ['預約編號', booking.booking_number],
         ['老師', state.teacher],
@@ -1173,7 +1186,8 @@ function showConfirmation(booking) {
         ['時間', state.time],
         ['課程時長', `${state.duration} 分鐘`],
         ['姓名', state.name],
-        ['費用', `NT$ ${state.price.toLocaleString()}`]
+        ['費用', `NT$ ${state.price.toLocaleString()}`],
+        ...(emailShown ? [['確認信', `已寄送至 ${emailShown}`]] : [])
     ];
 
     document.getElementById('confirmDetails').innerHTML = details
