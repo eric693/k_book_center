@@ -1058,9 +1058,57 @@ def handle_text_event(reply_token, user_id, text):
                 customer = Customer(name=name, phone=phone, line_user_id=user_id)
                 db.session.add(customer)
                 db.session.commit()
-            reply_text_message(reply_token, f'  {name}')
+            # 查詢是否有待完成的預約
+            pending = AIConversation.query.filter_by(
+                line_user_id=user_id, intent='pending_booking'
+            ).order_by(AIConversation.id.desc()).first()
+
+            if pending:
+                try:
+                    _, t_id, p_date, p_time = pending.user_message.split(':')
+                    teacher = Teacher.query.get(int(t_id))
+                    if teacher and check_availability(int(t_id), p_date, p_time):
+                        duration = 60
+                        total_price = int((duration / 60) * teacher.hourly_rate)
+                        booking = Booking(
+                            booking_number=generate_booking_number(),
+                            teacher_id=teacher.id,
+                            customer_name=customer.name,
+                            customer_phone=customer.phone,
+                            line_user_id=user_id,
+                            date=p_date,
+                            time=p_time,
+                            duration=duration,
+                            total_price=total_price,
+                            source='line'
+                        )
+                        db.session.add(booking)
+                        customer.total_bookings += 1
+                        customer.total_hours += duration
+                        customer.total_spent += total_price
+                        # 清除 pending
+                        pending.intent = 'pending_booking_done'
+                        db.session.commit()
+                        flex = build_booking_success_flex(booking)
+                        reply_flex_message(reply_token, f'預約成功 {booking.booking_number}', flex)
+                        return
+                    else:
+                        reply_text_message(reply_token, f'註冊成功！{name}
+
+很抱歉，您選擇的時段 {p_date} {p_time} 剛剛已被預約，請重新選擇時段。')
+                        pending.intent = 'pending_booking_done'
+                        db.session.commit()
+                        return
+                except Exception as e:
+                    print(f'自動完成預約失敗: {e}')
+
+            reply_text_message(reply_token, f'註冊成功！歡迎 {name}
+
+請傳送「老師名單」開始預約課程')
         else:
-            reply_text_message(reply_token, '\n  \n  0912345678')
+            reply_text_message(reply_token, '格式錯誤
+請輸入：註冊 姓名 手機號碼
+範例：註冊 張小明 0912345678')
         return
 
     # 
@@ -1125,7 +1173,15 @@ def handle_postback_event(reply_token, user_id, data):
 
         customer = Customer.query.filter_by(line_user_id=user_id).first()
         if not customer:
-            # 
+            # 暫存預約資訊到 AIConversation，等用戶註冊完後自動完成
+            pending = AIConversation(
+                line_user_id=user_id,
+                user_message=f'pending_booking:{teacher_id}:{date}:{time}',
+                ai_response='等待註冊',
+                intent='pending_booking'
+            )
+            db.session.add(pending)
+            db.session.commit()
             flex = build_register_flex(teacher_id, date, time)
             reply_flex_message(reply_token, '首次預約請先完成註冊', flex)
             return
