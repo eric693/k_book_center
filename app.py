@@ -216,6 +216,65 @@ def send_booking_email(to_email, customer_name, booking):
         return False
 
 
+def send_cancel_email(to_email, customer_name, booking):
+    """發送取消通知 Email"""
+    if not MAIL_USER or not MAIL_PASS or not to_email:
+        return False
+
+    teacher_name = booking.teacher.name if booking.teacher else ''
+    subject = f'【K書中心】預約取消通知 - {booking.booking_number}'
+
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#FAF8F5;">
+      <div style="background:#2C1810;padding:24px;text-align:center;">
+        <h1 style="color:#ffffff;margin:0;font-size:24px;">K書中心預約取消通知</h1>
+      </div>
+      <div style="background:#ffffff;padding:32px;border:1px solid #E8E3DB;">
+        <p style="font-size:16px;color:#1A1A1A;">親愛的 {customer_name}，您好！</p>
+        <p style="color:#6B6B6B;">您的以下預約已被取消：</p>
+        <table style="width:100%;border-collapse:collapse;margin:24px 0;">
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;width:35%;">預約編號</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.booking_number}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">老師</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{teacher_name} 老師</td>
+          </tr>
+          <tr style="border-bottom:1px solid #E8E3DB;">
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">日期</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.date}</td>
+          </tr>
+          <tr>
+            <td style="padding:12px 8px;color:#6B6B6B;font-size:13px;">時間</td>
+            <td style="padding:12px 8px;color:#2C1810;font-weight:600;">{booking.time}</td>
+          </tr>
+        </table>
+        <p style="color:#6B6B6B;font-size:14px;">如有疑問請透過 LINE 與我們聯繫，歡迎重新預約。</p>
+      </div>
+      <div style="text-align:center;padding:16px;color:#6B6B6B;font-size:12px;">
+        K書中心 &copy; 2026 · 此為系統自動發送，請勿回覆
+      </div>
+    </div>
+    """
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = MAIL_USER
+        msg['To'] = to_email
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=10) as smtp:
+            smtp.login(MAIL_USER, MAIL_PASS)
+            smtp.send_message(msg)
+        print(f'取消 Email 發送成功: {to_email}')
+        return True
+    except Exception as e:
+        print(f'取消 Email 發送失敗: {e}')
+        return False
+
+
+
 def check_admin():
     pw = request.headers.get('X-Admin-Password')
     if not pw or pw != ADMIN_PASSWORD:
@@ -1242,11 +1301,17 @@ def admin_cancel_booking(bid):
     booking = Booking.query.get_or_404(bid)
     booking.status = 'cancelled'
     db.session.commit()
+    # 寄取消通知給 LINE 用戶
     if booking.line_user_id:
+        teacher_name = booking.teacher.name if booking.teacher else ''
         send_text_message(
             booking.line_user_id,
-            f'\n\n{booking.booking_number}\n{booking.teacher.name}\n{booking.date} {booking.time}'
+            f'您的預約已取消\n\n預約編號：{booking.booking_number}\n老師：{teacher_name} 老師\n時間：{booking.date} {booking.time}\n\n如需重新預約請傳送「老師名單」'
         )
+    # 寄取消通知 Email
+    customer = Customer.query.filter_by(phone=booking.customer_phone).first()
+    if customer and customer.email:
+        send_cancel_email(customer.email, booking.customer_name, booking)
     return jsonify({'success': True})
 
 
@@ -1322,18 +1387,18 @@ def seed():
     if Teacher.query.count() > 0:
         return
     teachers_data = [
-        {'name': '', 'title': '',
-         'specialty': '',
-         'bio': '10', 'hourly_rate': 1500},
-        {'name': '', 'title': '',
-         'specialty': '',
-         'bio': '500', 'hourly_rate': 1200},
-        {'name': '', 'title': '',
-         'specialty': 'Python',
-         'bio': '', 'hourly_rate': 1800},
-        {'name': '', 'title': '',
-         'specialty': '',
-         'bio': 'TESOL', 'hourly_rate': 1000}
+        {'name': '陳志豪', 'title': '資深講師',
+         'specialty': '數位行銷、社群經營、品牌策略',
+         'bio': '擁有10年以上數位行銷實務經驗，協助超過百家企業建立品牌策略。', 'hourly_rate': 1500},
+        {'name': '林美慧', 'title': '專業顧問',
+         'specialty': '職涯規劃、履歷優化、面試技巧',
+         'bio': '曾任500強企業HR主管，專精職涯轉型與求職輔導。', 'hourly_rate': 1200},
+        {'name': '王俊傑', 'title': '技術專家',
+         'specialty': 'Python、資料分析、機器學習',
+         'bio': '資深資料科學家，擅長Python教學與AI應用實務開發。', 'hourly_rate': 1800},
+        {'name': '張雅婷', 'title': '語言教師',
+         'specialty': '英語教學、多益、商業英文',
+         'bio': '持TESOL國際英語教學認證，多益教學經驗豐富。', 'hourly_rate': 1000}
     ]
     for data in teachers_data:
         db.session.add(Teacher(**data))
