@@ -1093,22 +1093,16 @@ def handle_text_event(reply_token, user_id, text):
                         reply_flex_message(reply_token, f'預約成功 {booking.booking_number}', flex)
                         return
                     else:
-                        reply_text_message(reply_token, f'註冊成功！{name}
-
-很抱歉，您選擇的時段 {p_date} {p_time} 剛剛已被預約，請重新選擇時段。')
+                        reply_text_message(reply_token, f'註冊成功！{name}\n\n很抱歉，您選擇的時段 {p_date} {p_time} 剛剛已被預約，請重新選擇時段。')
                         pending.intent = 'pending_booking_done'
                         db.session.commit()
                         return
                 except Exception as e:
                     print(f'自動完成預約失敗: {e}')
 
-            reply_text_message(reply_token, f'註冊成功！歡迎 {name}
-
-請傳送「老師名單」開始預約課程')
+            reply_text_message(reply_token, f'註冊成功！歡迎 {name}\n\n請傳送「老師名單」開始預約課程')
         else:
-            reply_text_message(reply_token, '格式錯誤
-請輸入：註冊 姓名 手機號碼
-範例：註冊 張小明 0912345678')
+            reply_text_message(reply_token, '格式錯誤\n請輸入：註冊 姓名 手機號碼\n範例：註冊 張小明 0912345678')
         return
 
     # 
