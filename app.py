@@ -351,7 +351,7 @@ def build_teacher_carousel(teachers):
                     },
                     {
                         "type": "text",
-                        "text": t.title or "",
+                        "text": t.title or "講師",
                         "size": "sm",
                         "color": "#ffffff99"
                     }
@@ -1075,7 +1075,7 @@ def create_booking():
     if not teacher:
         return jsonify({'error': 'Teacher not found'}), 404
     if not check_availability(teacher.id, data['date'], data['time']):
-        return jsonify({'error': ''}), 400
+        return jsonify({'error': '此時段已被預約，請選擇其他時間'}), 400
     duration = data.get('duration', 60)
     total_price = int((duration / 60) * teacher.hourly_rate)
     booking = Booking(
@@ -1096,6 +1096,7 @@ def create_booking():
     if not customer:
         customer = Customer(name=data['name'], phone=data['phone'])
         db.session.add(customer)
+        db.session.flush()  # 確保 customer 有 id，避免 NoneType 錯誤
     customer.total_bookings += 1
     customer.total_hours += duration
     customer.total_spent += total_price
