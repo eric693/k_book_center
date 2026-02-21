@@ -1017,7 +1017,7 @@ def line_webhook():
             #   
             elif event_type == 'follow':
                 flex = build_welcome_flex()
-                reply_flex_message(reply_token, ' K', flex)
+                reply_flex_message(reply_token, 'K書中心服務選單', flex)
 
         except Exception as e:
             print(f' event : {e}')
@@ -1033,7 +1033,7 @@ def handle_text_event(reply_token, user_id, text):
     if '' in text or '' in text:
         teachers = Teacher.query.filter_by(is_active=True).all()
         flex = build_teacher_carousel(teachers)
-        reply_flex_message(reply_token, f' {len(teachers)} ', flex)
+        reply_flex_message(reply_token, f'老師名單，共 {len(teachers)} 位', flex)
         return
 
     # 
@@ -1042,7 +1042,7 @@ def handle_text_event(reply_token, user_id, text):
             line_user_id=user_id, status='confirmed'
         ).order_by(Booking.date, Booking.time).all()
         flex = build_my_bookings_flex(bookings)
-        reply_flex_message(reply_token, f' {len(bookings)} ', flex)
+        reply_flex_message(reply_token, f'我的預約，共 {len(bookings)} 筆', flex)
         return
 
     #   
@@ -1067,7 +1067,7 @@ def handle_text_event(reply_token, user_id, text):
 
     # 
     flex = build_welcome_flex()
-    reply_flex_message(reply_token, 'K', flex)
+    reply_flex_message(reply_token, 'K書中心服務選單', flex)
 
 
 def handle_postback_event(reply_token, user_id, data):
@@ -1083,7 +1083,7 @@ def handle_postback_event(reply_token, user_id, data):
             reply_text_message(reply_token, '')
             return
         flex = build_date_picker_flex(teacher.id, teacher.name)
-        reply_flex_message(reply_token, f' - {teacher.name} ', flex)
+        reply_flex_message(reply_token, f'預約 {teacher.name} 老師 - 選擇日期', flex)
 
     # 2. 選擇日期 -> 顯示時段
     elif action == 'select_date':
@@ -1095,7 +1095,7 @@ def handle_postback_event(reply_token, user_id, data):
             return
         available = get_available_times(teacher_id, date)
         flex = build_time_picker_flex(teacher_id, teacher.name, date, available)
-        reply_flex_message(reply_token, f'{date} ', flex)
+        reply_flex_message(reply_token, f'{date} 可預約時段', flex)
 
     # 3. 選擇時段 -> 顯示確認畫面
     elif action == 'select_time':
@@ -1108,7 +1108,7 @@ def handle_postback_event(reply_token, user_id, data):
             return
         price = teacher.hourly_rate
         flex = build_confirm_flex(teacher.name, date, time, price, teacher_id)
-        reply_flex_message(reply_token, '', flex)
+        reply_flex_message(reply_token, '確認預約資訊', flex)
 
     # 4. 確認預約 -> 完成
     elif action == 'confirm_booking':
@@ -1129,7 +1129,7 @@ def handle_postback_event(reply_token, user_id, data):
         if not customer:
             # 
             flex = build_register_flex(teacher_id, date, time)
-            reply_flex_message(reply_token, '', flex)
+            reply_flex_message(reply_token, '首次預約請先完成註冊', flex)
             return
 
         duration = 60
@@ -1168,7 +1168,7 @@ def handle_postback_event(reply_token, user_id, data):
         )
 
         flex = build_booking_success_flex(booking)
-        reply_flex_message(reply_token, f'{booking.booking_number}', flex)
+        reply_flex_message(reply_token, f'預約成功 {booking.booking_number}', flex)
 
     # 5. 
     elif action == 'cancel_booking':
