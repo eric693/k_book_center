@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K書中心預約系統</title>
+    <title>老師預約系統</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1e3a5f;
-            --accent: #4a90e2;
-            --secondary: #6b8cae;
-            --background: #f8f9fa;
-            --card-bg: #ffffff;
-            --text: #2c3e50;
-            --text-light: #7f8c8d;
-            --border: #e1e8ed;
-            --success: #27ae60;
-            --success-bg: #e8f5e9;
+            --primary: #2C1810;
+            --accent: #D4704A;
+            --secondary: #8B6B47;
+            --background: #FAF8F5;
+            --card-bg: #FFFFFF;
+            --text: #1A1A1A;
+            --text-light: #6B6B6B;
+            --border: #E8E3DB;
+            --success: #4A8B6B;
+            --success-bg: #F0F7F4;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,6 +26,7 @@
             background: var(--background);
             color: var(--text);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -73,14 +74,14 @@
             margin-top: 16px;
         }
 
-        .study-info-card {
+        .info-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             padding: 30px;
             min-width: 260px;
         }
 
-        .study-info-card .label {
+        .info-card .label {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
@@ -88,7 +89,7 @@
             margin-bottom: 4px;
         }
 
-        .study-info-card .value {
+        .info-card .value {
             font-size: 15px;
             color: var(--primary);
             font-weight: 500;
@@ -108,8 +109,7 @@
         }
 
         .status-dot {
-            width: 6px;
-            height: 6px;
+            width: 6px; height: 6px;
             border-radius: 50%;
             background: var(--success);
             animation: pulse 2s infinite;
@@ -142,85 +142,78 @@
             margin-bottom: 30px;
         }
 
-        .rooms-grid {
+        .teachers-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 24px;
             margin-bottom: 50px;
         }
 
-        .room-card {
+        .teacher-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            padding: 32px;
+            overflow: hidden;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .room-card:hover {
-            border-color: var(--accent);
+        .teacher-card:hover {
+            border-color: var(--secondary);
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(30, 58, 95, 0.08);
+            box-shadow: 0 10px 30px rgba(44, 24, 16, 0.06);
         }
 
-        .room-card.selected {
+        .teacher-card.selected {
             border-color: var(--accent);
-            background: rgba(74, 144, 226, 0.03);
+            background: rgba(212, 112, 74, 0.03);
         }
 
-        .room-type {
-            display: inline-block;
+        .teacher-card.selected::after {
+            content: 'SELECTED';
+            position: absolute;
+            top: 12px; right: 12px;
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            letter-spacing: 0.08em;
+        }
+
+        .teacher-info {
+            padding: 24px;
+            position: relative;
+        }
+
+        .teacher-name {
+            font-family: 'Crimson Pro', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .teacher-title {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
             color: var(--accent);
-            background: rgba(74, 144, 226, 0.1);
-            padding: 4px 12px;
-            border-radius: 2px;
             font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .room-name {
-            font-family: 'Crimson Pro', serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--primary);
             margin-bottom: 12px;
         }
 
-        .room-capacity {
-            font-size: 14px;
+        .teacher-specialty {
+            font-size: 13px;
             color: var(--text-light);
+            line-height: 1.6;
             margin-bottom: 16px;
         }
 
-        .room-features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .feature-tag {
-            font-size: 12px;
-            padding: 4px 10px;
-            background: var(--background);
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-
-        .room-price {
+        .teacher-rate {
             font-family: 'Crimson Pro', serif;
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 20px;
             color: var(--primary);
-        }
-
-        .room-price-unit {
-            font-size: 14px;
-            font-weight: 400;
-            color: var(--text-light);
+            font-weight: 600;
         }
 
         .calendar-section {
@@ -244,8 +237,7 @@
         .nav-btn {
             background: none;
             border: 1px solid var(--border);
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -494,7 +486,7 @@
             width: 100%;
             padding: 18px;
             background: var(--accent);
-            color: white;
+            color: var(--background);
             border: none;
             font-size: 15px;
             font-weight: 600;
@@ -508,7 +500,7 @@
         .book-btn:hover {
             background: var(--primary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(30, 58, 95, 0.15);
+            box-shadow: 0 10px 30px rgba(44, 24, 16, 0.15);
         }
 
         .notes-card {
@@ -549,11 +541,9 @@
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -573,11 +563,10 @@
         }
 
         .confirm-icon {
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
             border-radius: 50%;
             background: var(--success-bg);
-            border: 2px solid #c8e6c9;
+            border: 2px solid #C8E3D8;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -634,7 +623,7 @@
         .confirm-btn {
             padding: 14px 40px;
             background: var(--primary);
-            color: white;
+            color: var(--background);
             border: none;
             font-size: 14px;
             font-weight: 600;
@@ -658,33 +647,17 @@
         }
 
         @media (max-width: 900px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .sidebar {
-                position: static;
-            }
-            .header-top {
-                flex-direction: column;
-            }
-            .rooms-grid {
-                grid-template-columns: 1fr;
-            }
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+            .main-content { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .header-top { flex-direction: column; }
+            .teachers-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 600px) {
-            .container {
-                padding: 0 20px;
-            }
-            .header-left h1 {
-                font-size: 40px;
-            }
-            .time-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+            .container { padding: 0 20px; }
+            .header-left h1 { font-size: 40px; }
+            .time-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
@@ -694,18 +667,18 @@
     <div class="container">
         <div class="header-top">
             <div class="header-left">
-                <div class="header-subtitle">學習空間 · 預約系統</div>
-                <h1>K書中心<br>座位預約</h1>
+                <div class="header-subtitle">專業教學 · 預約系統</div>
+                <h1>老師課程<br>線上預約</h1>
                 <p class="header-desc">
-                    單人座位、雙人討論區、小包廂，多種空間選擇，
-                    支援線上預約與 LINE 智慧客服。
+                    專業師資即時預約，彈性時段選擇，
+                    支援 LINE 智慧客服自動預約。
                 </p>
             </div>
-            <div class="study-info-card">
-                <div class="label">場館名稱</div>
-                <div class="value">K書中心 學習空間</div>
-                <div class="label">開放時間</div>
-                <div class="value">每日 08:00 – 23:00</div>
+            <div class="info-card">
+                <div class="label">服務時間</div>
+                <div class="value">每日 09:00 – 21:00</div>
+                <div class="label">預約方式</div>
+                <div class="value">網頁 · LINE AI</div>
                 <div class="label">當前狀態</div>
                 <div class="value">
                     <span class="status-badge">
@@ -722,15 +695,15 @@
         <div class="left-panel">
             
             <div class="section-block">
-                <h2 class="section-title">選擇座位類型</h2>
-                <p class="section-subtitle">請選擇您需要的學習空間</p>
+                <h2 class="section-title">選擇老師</h2>
+                <p class="section-subtitle">請選擇您想預約的專業老師</p>
 
-                <div class="rooms-grid" id="roomsGrid">
+                <div class="teachers-grid" id="teachersGrid">
                     <!-- 動態載入 -->
                 </div>
             </div>
 
-            <div class="section-block">
+            <div class="section-block" id="dateSection" style="display:none;">
                 <h2 class="section-title">選擇日期</h2>
                 <p class="section-subtitle">請選擇您想預約的日期</p>
 
@@ -746,49 +719,27 @@
                 </div>
             </div>
 
-            <div class="section-block" id="timeSlotsSection" style="display:none;">
+            <div class="section-block" id="timeSection" style="display:none;">
                 <h2 class="section-title">選擇時段</h2>
                 <p class="section-subtitle" id="selectedDateLabel"></p>
 
                 <div class="time-slots-section">
                     <div class="time-period">
-                        <div class="time-period-label">早晨 Morning</div>
-                        <div class="time-grid">
-                            <div class="time-slot" onclick="selectTime(this,'08:00')">08:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'09:00')">09:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'10:00')">10:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'11:00')">11:00</div>
-                        </div>
+                        <div class="time-period-label">上午 Morning</div>
+                        <div class="time-grid" id="morningSlots"></div>
                     </div>
                     <div class="time-period">
                         <div class="time-period-label">下午 Afternoon</div>
-                        <div class="time-grid">
-                            <div class="time-slot" onclick="selectTime(this,'12:00')">12:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'13:00')">13:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'14:00')">14:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'15:00')">15:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'16:00')">16:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'17:00')">17:00</div>
-                        </div>
+                        <div class="time-grid" id="afternoonSlots"></div>
                     </div>
                     <div class="time-period">
                         <div class="time-period-label">晚間 Evening</div>
-                        <div class="time-grid">
-                            <div class="time-slot" onclick="selectTime(this,'18:00')">18:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'19:00')">19:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'20:00')">20:00</div>
-                            <div class="time-slot" onclick="selectTime(this,'21:00')">21:00</div>
-                        </div>
+                        <div class="time-grid" id="eveningSlots"></div>
                     </div>
-                </div>
-
-                <div class="form-group" style="margin-top:30px;">
-                    <label>結束時間</label>
-                    <input type="time" id="endTime" style="max-width:200px;">
                 </div>
             </div>
 
-            <div class="section-block">
+            <div class="section-block" id="formSection" style="display:none;">
                 <h2 class="section-title">聯絡資料</h2>
                 <p class="section-subtitle">請填寫您的聯絡資訊</p>
 
@@ -805,7 +756,7 @@
                 <div class="form-row">
                     <div class="form-group full">
                         <label>備註</label>
-                        <textarea placeholder="有任何特殊需求嗎？（選填）"></textarea>
+                        <textarea id="note" placeholder="有任何特殊需求嗎？（選填）"></textarea>
                     </div>
                 </div>
             </div>
@@ -817,20 +768,20 @@
                 <div class="summary-title">預約摘要</div>
 
                 <div class="summary-item">
-                    <div class="summary-label">座位</div>
-                    <div class="summary-value empty" id="sum-room">請選擇座位</div>
+                    <div class="summary-label">老師</div>
+                    <div class="summary-value empty" id="sum-teacher">請選擇老師</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-label">日期</div>
                     <div class="summary-value empty" id="sum-date">請選擇日期</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-label">時段</div>
-                    <div class="summary-value empty" id="sum-time">請選擇時段</div>
+                    <div class="summary-label">時間</div>
+                    <div class="summary-value empty" id="sum-time">請選擇時間</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-label">時數</div>
-                    <div class="summary-value empty" id="sum-hours">0 小時</div>
+                    <div class="summary-label">課程時長</div>
+                    <div class="summary-value empty" id="sum-duration">60 分鐘</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-label">姓名</div>
@@ -852,12 +803,12 @@
             <div class="notes-card">
                 <h4>注意事項</h4>
                 <ul>
-                    <li>請提前 10 分鐘到場報到</li>
-                    <li>取消或更改請提前 2 小時通知</li>
-                    <li>場館提供 WiFi 與插座</li>
-                    <li>請保持安靜，勿影響他人</li>
-                    <li>禁止飲食（礦泉水除外）</li>
-                    <li>貴重物品請自行保管</li>
+                    <li>請提前 10 分鐘到場準備</li>
+                    <li>取消或更改請提前 24 小時通知</li>
+                    <li>課程時長為 60 分鐘</li>
+                    <li>請攜帶相關學習資料</li>
+                    <li>遲到超過 15 分鐘視同放棄</li>
+                    <li>可透過 LINE 聯繫老師</li>
                 </ul>
             </div>
         </div>
@@ -866,7 +817,7 @@
 
 <footer>
     <div class="container">
-        © 2026 K書中心預約系統 · 支援 LINE 智慧預約
+        © 2026 老師預約系統 · 支援 LINE 智慧預約
     </div>
 </footer>
 
@@ -874,7 +825,7 @@
     <div class="modal-content">
         <div class="confirm-icon">OK</div>
         <h2>預約成功！</h2>
-        <p>您的座位預約已確認<br>預約編號將以簡訊傳送至您的手機</p>
+        <p>您的課程預約已確認<br>預約編號將以簡訊傳送至您的手機</p>
         <div class="confirm-details" id="confirmDetails"></div>
         <button class="confirm-btn" onclick="closeConfirm()">完成</button>
     </div>
@@ -883,69 +834,62 @@
 <script>
 const API = '';
 const state = {
-    room: null,
-    roomId: null,
+    teacher: null,
+    teacherId: null,
+    teacherRate: 0,
     date: null,
-    startTime: null,
-    endTime: null,
-    hours: 0,
+    time: null,
+    duration: 60,
     price: 0,
     name: '',
     phone: ''
 };
 
-let rooms = [];
+let teachers = [];
 let currentDate = new Date();
+let availableTimes = [];
+let bookedTimes = [];
+
 const months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 const days = ['日','一','二','三','四','五','六'];
 
-async function loadRooms() {
+// Load teachers
+async function loadTeachers() {
     try {
-        const res = await fetch(`${API}/api/rooms`);
-        rooms = await res.json();
-        renderRooms();
+        const res = await fetch(`${API}/api/teachers`);
+        teachers = await res.json();
+        renderTeachers();
     } catch (e) {
-        console.error('載入座位失敗', e);
+        console.error('載入老師失敗', e);
     }
 }
 
-function renderRooms() {
-    const typeNames = {
-        'single': '單人座位',
-        'double': '雙人座位',
-        'group': '小包廂',
-        'vip': 'VIP包廂'
-    };
-    
-    const grid = document.getElementById('roomsGrid');
-    grid.innerHTML = rooms.map(room => `
-        <div class="room-card" onclick="selectRoom(${room.id}, '${room.name}', '${room.type}', ${room.hourly_rate})">
-            <div class="room-type">${typeNames[room.type] || room.type}</div>
-            <div class="room-name">${room.name}</div>
-            <div class="room-capacity">可容納 ${room.capacity} 人</div>
-            <div class="room-features">
-                <span class="feature-tag">獨立插座</span>
-                <span class="feature-tag">WiFi</span>
-                ${room.type === 'group' || room.type === 'vip' ? '<span class="feature-tag">白板</span>' : ''}
-            </div>
-            <div class="room-price">
-                NT$ ${room.hourly_rate}
-                <span class="room-price-unit">/ 小時</span>
+function renderTeachers() {
+    const grid = document.getElementById('teachersGrid');
+    grid.innerHTML = teachers.map(t => `
+        <div class="teacher-card" onclick="selectTeacher(${t.id}, '${t.name}', ${t.hourly_rate})">
+            <div class="teacher-info">
+                <div class="teacher-name">${t.name}</div>
+                <div class="teacher-title">${t.title || '專業講師'}</div>
+                <div class="teacher-specialty">${t.specialty || ''}</div>
+                <div class="teacher-rate">NT$ ${t.hourly_rate} / 小時</div>
             </div>
         </div>
     `).join('');
 }
 
-function selectRoom(id, name, type, rate) {
-    state.roomId = id;
-    state.room = name;
-    state.hourlyRate = rate;
+function selectTeacher(id, name, rate) {
+    state.teacherId = id;
+    state.teacher = name;
+    state.teacherRate = rate;
     
-    document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.teacher-card').forEach(c => c.classList.remove('selected'));
     event.currentTarget.classList.add('selected');
     
-    document.getElementById('sum-room').textContent = name;
-    document.getElementById('sum-room').classList.remove('empty');
+    document.getElementById('sum-teacher').textContent = name;
+    document.getElementById('sum-teacher').classList.remove('empty');
+    
+    document.getElementById('dateSection').style.display = 'block';
     updatePrice();
 }
 
@@ -986,55 +930,71 @@ function changeMonth(dir) {
     renderCalendar();
 }
 
-function selectDate(year, month, day) {
+async function selectDate(year, month, day) {
     document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
     event.currentTarget.classList.add('selected');
     
     const d = new Date(year, month, day);
-    state.date = `${year}/${String(month+1).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+    state.date = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const weekdays = ['日','一','二','三','四','五','六'];
     
     document.getElementById('sum-date').textContent = state.date + ' 週' + weekdays[d.getDay()];
     document.getElementById('sum-date').classList.remove('empty');
     document.getElementById('selectedDateLabel').textContent = `${state.date} 週${weekdays[d.getDay()]} 可預約時段`;
-    document.getElementById('timeSlotsSection').style.display = 'block';
     
-    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-    state.startTime = null;
-    document.getElementById('sum-time').textContent = '請選擇時段';
-    document.getElementById('sum-time').className = 'summary-value empty';
+    // Load available times
+    await loadAvailableTimes();
+    
+    document.getElementById('timeSection').style.display = 'block';
+    document.getElementById('formSection').style.display = 'block';
 }
 
-function selectTime(el, time) {
-    document.querySelectorAll('.time-slot:not(.booked)').forEach(s => s.classList.remove('selected'));
-    el.classList.add('selected');
-    state.startTime = time;
-    updateSummary();
+async function loadAvailableTimes() {
+    try {
+        const res = await fetch(`${API}/api/teachers/${state.teacherId}/availability?date=${state.date}`);
+        const data = await res.json();
+        
+        availableTimes = data.available_times;
+        bookedTimes = data.booked_times;
+        
+        renderTimeSlots();
+    } catch (e) {
+        console.error('載入可用時段失敗', e);
+    }
+}
+
+function renderTimeSlots() {
+    const morning = availableTimes.filter(t => parseInt(t.split(':')[0]) < 12);
+    const afternoon = availableTimes.filter(t => {
+        const h = parseInt(t.split(':')[0]);
+        return h >= 12 && h < 18;
+    });
+    const evening = availableTimes.filter(t => parseInt(t.split(':')[0]) >= 18);
+    
+    document.getElementById('morningSlots').innerHTML = morning.map(t => 
+        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
+    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
+    
+    document.getElementById('afternoonSlots').innerHTML = afternoon.map(t => 
+        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
+    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
+    
+    document.getElementById('eveningSlots').innerHTML = evening.map(t => 
+        `<div class="time-slot" onclick="selectTime('${t}')">${t}</div>`
+    ).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text-light);">無可用時段</div>';
+}
+
+function selectTime(time) {
+    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    state.time = time;
+    
+    document.getElementById('sum-time').textContent = time;
+    document.getElementById('sum-time').classList.remove('empty');
+    updatePrice();
 }
 
 function updateSummary() {
-    if (state.startTime) {
-        const endTime = document.getElementById('endTime').value || '';
-        if (endTime) {
-            state.endTime = endTime;
-            const start = new Date(`2000-01-01 ${state.startTime}`);
-            const end = new Date(`2000-01-01 ${endTime}`);
-            const hours = (end - start) / (1000 * 60 * 60);
-            
-            if (hours > 0) {
-                state.hours = hours;
-                document.getElementById('sum-time').textContent = `${state.startTime} - ${endTime}`;
-                document.getElementById('sum-time').classList.remove('empty');
-                document.getElementById('sum-hours').textContent = `${hours} 小時`;
-                document.getElementById('sum-hours').classList.remove('empty');
-                updatePrice();
-            }
-        } else {
-            document.getElementById('sum-time').textContent = `${state.startTime} - ?`;
-            document.getElementById('sum-time').classList.remove('empty');
-        }
-    }
-    
     const name = document.getElementById('customerName').value;
     const phone = document.getElementById('customerPhone').value;
     if (name) {
@@ -1046,25 +1006,26 @@ function updateSummary() {
 }
 
 function updatePrice() {
-    if (state.hours && state.hourlyRate) {
-        state.price = state.hours * state.hourlyRate;
-        document.getElementById('sum-price').textContent = 'NT$ ' + state.price;
+    if (state.teacherRate) {
+        state.price = Math.round((state.duration / 60) * state.teacherRate);
+        document.getElementById('sum-price').textContent = 'NT$ ' + state.price.toLocaleString();
     }
 }
 
 async function submitBooking() {
-    if (!state.roomId || !state.date || !state.startTime || !state.endTime || !state.name || !state.phone) {
+    if (!state.teacherId || !state.date || !state.time || !state.name || !state.phone) {
         alert('請完整填寫預約資訊');
         return;
     }
     
     const data = {
-        room_id: state.roomId,
+        teacher_id: state.teacherId,
         date: state.date,
-        start_time: state.startTime,
-        end_time: state.endTime,
+        time: state.time,
+        duration: state.duration,
         name: state.name,
-        phone: state.phone
+        phone: state.phone,
+        note: document.getElementById('note').value
     };
     
     try {
@@ -1089,12 +1050,12 @@ async function submitBooking() {
 function showConfirmation(booking) {
     const details = [
         ['預約編號', booking.booking_number],
-        ['座位', state.room],
+        ['老師', state.teacher],
         ['日期', state.date],
-        ['時段', `${state.startTime} - ${state.endTime}`],
-        ['時數', `${state.hours} 小時`],
+        ['時間', state.time],
+        ['課程時長', `${state.duration} 分鐘`],
         ['姓名', state.name],
-        ['費用', `NT$ ${state.price}`]
+        ['費用', `NT$ ${state.price.toLocaleString()}`]
     ];
     
     document.getElementById('confirmDetails').innerHTML = details
@@ -1113,9 +1074,7 @@ document.getElementById('confirmModal').addEventListener('click', function(e) {
     if (e.target === this) closeConfirm();
 });
 
-document.getElementById('endTime').addEventListener('change', updateSummary);
-
-loadRooms();
+loadTeachers();
 renderCalendar();
 </script>
 

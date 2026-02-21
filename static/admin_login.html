@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員登入 - 老師預約系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, #8B6B47 0%, #2C1810 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 48px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(44, 24, 16, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2C1810;
+            margin-bottom: 8px;
+        }
+
+        .logo-subtitle {
+            font-size: 14px;
+            color: #6B6B6B;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2C1810;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #E8E3DB;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #FFFFFF;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #D4704A;
+            box-shadow: 0 0 0 3px rgba(212, 112, 74, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #D4704A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .login-btn:hover {
+            background: #2C1810;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(44, 24, 16, 0.3);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            border: 1px solid #fcc;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: #D4704A;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: #2C1810;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="logo">
+        <div class="logo-title">老師預約系統</div>
+        <div class="logo-subtitle">管理後台登入</div>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <form id="loginForm" onsubmit="login(event)">
+        <div class="form-group">
+            <label class="form-label">管理員密碼</label>
+            <input type="password" class="form-input" id="password" placeholder="請輸入管理員密碼" required autofocus>
+        </div>
+
+        <button type="submit" class="login-btn">登入</button>
+    </form>
+
+    <div class="back-link">
+        <a href="/">返回預約頁面</a>
+    </div>
+</div>
+
+<script>
+const API = '';
+
+async function login(e) {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('errorMessage');
+    
+    try {
+        const res = await fetch(`${API}/admin/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        
+        if (res.ok) {
+            sessionStorage.setItem('adminPassword', password);
+            window.location.href = '/dashboard';
+        } else {
+            errorMsg.textContent = '密碼錯誤，請重試';
+            errorMsg.classList.add('show');
+        }
+    } catch (e) {
+        errorMsg.textContent = '登入失敗：' + e.message;
+        errorMsg.classList.add('show');
+    }
+}
+</script>
+
+</body>
+</html>
