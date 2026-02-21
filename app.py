@@ -333,7 +333,8 @@ def build_teacher_carousel(teachers):
     bubbles = []
     for t in teachers:
         # 
-        specialty_short = (t.specialty or '')[:30] + ('...' if len(t.specialty or '') > 30 else '')
+        _spec = (t.specialty or '').strip()
+        specialty_short = (_spec if _spec else '專業講師')[:30] + ('...' if len(_spec) > 30 else '')
 
         bubble = {
             "type": "bubble",
