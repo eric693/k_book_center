@@ -289,9 +289,9 @@ def build_welcome_flex():
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": " K", "weight": "bold",
+                {"type": "text", "text": "K書中心", "weight": "bold",
                  "size": "xl", "color": "#ffffff"},
-                {"type": "text", "text": "", "size": "sm",
+                {"type": "text", "text": "請選擇您需要的服務", "size": "sm",
                  "color": "#ffffff99"}
             ],
             "backgroundColor": "#4A90E2",
@@ -308,8 +308,8 @@ def build_welcome_flex():
                     "color": "#4A90E2",
                     "action": {
                         "type": "message",
-                        "label": " ",
-                        "text": ""
+                        "label": "查看老師名單",
+                        "text": "老師名單"
                     },
                     "height": "sm"
                 },
@@ -318,8 +318,8 @@ def build_welcome_flex():
                     "style": "secondary",
                     "action": {
                         "type": "message",
-                        "label": " ",
-                        "text": ""
+                        "label": "查詢我的預約",
+                        "text": "查詢預約"
                     },
                     "height": "sm"
                 }
@@ -344,7 +344,7 @@ def build_teacher_carousel(teachers):
                 "contents": [
                     {
                         "type": "text",
-                        "text": t.name + " ",
+                        "text": t.name + " 老師",
                         "weight": "bold",
                         "size": "lg",
                         "color": "#ffffff"
@@ -369,7 +369,7 @@ def build_teacher_carousel(teachers):
                         "layout": "baseline",
                         "spacing": "sm",
                         "contents": [
-                            {"type": "text", "text": "", "color": "#aaaaaa",
+                            {"type": "text", "text": "專長", "color": "#aaaaaa",
                              "size": "sm", "flex": 1},
                             {"type": "text", "text": specialty_short,
                              "wrap": True, "color": "#666666", "size": "sm", "flex": 4}
@@ -380,7 +380,7 @@ def build_teacher_carousel(teachers):
                         "layout": "baseline",
                         "spacing": "sm",
                         "contents": [
-                            {"type": "text", "text": "", "color": "#aaaaaa",
+                            {"type": "text", "text": "時薪", "color": "#aaaaaa",
                              "size": "sm", "flex": 1},
                             {"type": "text", "text": f"${t.hourly_rate}/hr",
                              "color": "#E05A2B", "size": "sm", "flex": 4, "weight": "bold"}
@@ -399,9 +399,9 @@ def build_teacher_carousel(teachers):
                         "height": "sm",
                         "action": {
                             "type": "postback",
-                            "label": "",
+                            "label": "選擇此老師",
                             "data": f"action=select_teacher&teacher_id={t.id}&teacher_name={t.name}",
-                            "displayText": f" {t.name} "
+                            "displayText": f"我想預約 {t.name} 老師"
                         }
                     }
                 ]
@@ -422,8 +422,8 @@ def build_date_picker_flex(teacher_id, teacher_name):
 
     for i in range(1, 8):
         d = today + timedelta(days=i)
-        label = d.strftime('%m/%d') + (' ()' if i == 1 else '')
-        weekday = ['', '', '', '', '', '', ''][d.weekday()]
+        label = d.strftime('%m/%d') + (' (明天)' if i == 1 else '')
+        weekday = ['一', '二', '三', '四', '五', '六', '日'][d.weekday()]
         date_buttons.append({
             "type": "button",
             "style": "secondary",
@@ -432,7 +432,7 @@ def build_date_picker_flex(teacher_id, teacher_name):
                 "type": "postback",
                 "label": f"{d.strftime('%m/%d')} ({weekday})",
                 "data": f"action=select_date&teacher_id={teacher_id}&date={d.strftime('%Y-%m-%d')}",
-                "displayText": f" {d.strftime('%Y-%m-%d')}"
+                "displayText": f"選擇 {d.strftime('%Y-%m-%d')}"
             }
         })
 
@@ -443,9 +443,9 @@ def build_date_picker_flex(teacher_id, teacher_name):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": f" {teacher_name} ",
+                {"type": "text", "text": f"預約 {teacher_name} 老師",
                  "weight": "bold", "size": "lg", "color": "#ffffff"},
-                {"type": "text", "text": "",
+                {"type": "text", "text": "請選擇上課日期",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#27AE60",
@@ -469,9 +469,9 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
-                    {"type": "text", "text": " ",
+                    {"type": "text", "text": "此日期已無可用時段",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "",
+                    {"type": "text", "text": "請返回選擇其他日期",
                      "color": "#888888", "size": "sm", "margin": "md"}
                 ]
             },
@@ -485,7 +485,7 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                         "type": "postback",
                         "label": "<- 返回",
                         "data": f"action=select_teacher&teacher_id={teacher_id}&teacher_name={teacher_name}",
-                        "displayText": f""
+                        "displayText": "重新選擇日期"
                     }
                 }]
             }
@@ -504,7 +504,7 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
                 "type": "postback",
                 "label": t,
                 "data": f"action=select_time&teacher_id={teacher_id}&date={date}&time={t}",
-                "displayText": f" {t}"
+                "displayText": f"選擇 {t}"
             }
         })
         if len(row) == 3 or i == len(available_times) - 1:
@@ -519,7 +519,7 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
             })
             row = []
 
-    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%m%d')
+    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%m月%d日')
 
     return {
         "type": "bubble",
@@ -528,9 +528,9 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": f" {teacher_name} ",
+                {"type": "text", "text": f"預約 {teacher_name} 老師",
                  "weight": "bold", "size": "lg", "color": "#ffffff"},
-                {"type": "text", "text": f" {d_fmt}",
+                {"type": "text", "text": f"{d_fmt}  請選擇時段",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#27AE60",
@@ -547,8 +547,8 @@ def build_time_picker_flex(teacher_id, teacher_name, date, available_times):
 
 def build_confirm_flex(teacher_name, date, time, price, teacher_id):
     """"""
-    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d')
-    weekday = ['', '', '', '', '', '', ''][
+    d_fmt = datetime.strptime(date, '%Y-%m-%d').strftime('%Y年%m月%d日')
+    weekday = ['一', '二', '三', '四', '五', '六', '日'][
         datetime.strptime(date, '%Y-%m-%d').weekday()
     ]
     return {
@@ -558,7 +558,7 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": "",
+                {"type": "text", "text": "確認預約資訊",
                  "weight": "bold", "size": "xl", "color": "#ffffff"},
             ],
             "backgroundColor": "#E67E22",
@@ -569,18 +569,18 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
             "layout": "vertical",
             "spacing": "md",
             "contents": [
-                _info_row(" ", f"{teacher_name} "),
-                _info_row(" ", f"{d_fmt} ({weekday})"),
-                _info_row(" ", time),
+                _info_row("老師", f"{teacher_name} 老師"),
+                _info_row("日期", f"{d_fmt} (週{weekday})"),
+                _info_row("時間", time),
                 _info_row("時長", "60 分鐘"),
-                _info_row(" ", f"$ {price} "),
+                _info_row("費用", f"$ {price} 元"),
                 {
                     "type": "separator",
                     "margin": "md"
                 },
                 {
                     "type": "text",
-                    "text": "",
+                    "text": "確認後將完成預約，請準時出席。",
                     "size": "xs",
                     "color": "#888888",
                     "wrap": True,
@@ -602,7 +602,7 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
                         "type": "postback",
                         "label": "<- 返回",
                         "data": f"action=select_date&teacher_id={teacher_id}&date={date}",
-                        "displayText": ""
+                        "displayText": "重新選擇時段"
                     }
                 },
                 {
@@ -613,9 +613,9 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
                     "height": "sm",
                     "action": {
                         "type": "postback",
-                        "label": " ",
+                        "label": "確認預約",
                         "data": f"action=confirm_booking&teacher_id={teacher_id}&date={date}&time={time}",
-                        "displayText": f" {teacher_name}  {date} {time}"
+                        "displayText": f"確認預約 {teacher_name} 老師 {date} {time}"
                     }
                 }
             ]
@@ -626,8 +626,8 @@ def build_confirm_flex(teacher_name, date, time, price, teacher_id):
 def build_booking_success_flex(booking):
     """"""
     teacher_name = booking.teacher.name if booking.teacher else ''
-    d_fmt = datetime.strptime(booking.date, '%Y-%m-%d').strftime('%Y%m%d')
-    weekday = ['', '', '', '', '', '', ''][
+    d_fmt = datetime.strptime(booking.date, '%Y-%m-%d').strftime('%Y年%m月%d日')
+    weekday = ['一', '二', '三', '四', '五', '六', '日'][
         datetime.strptime(booking.date, '%Y-%m-%d').weekday()
     ]
     return {
@@ -637,7 +637,7 @@ def build_booking_success_flex(booking):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": " ",
+                {"type": "text", "text": "預約成功！",
                  "weight": "bold", "size": "xl", "color": "#ffffff"},
                 {"type": "text", "text": booking.booking_number,
                  "size": "sm", "color": "#ffffff99"}
@@ -650,7 +650,7 @@ def build_booking_success_flex(booking):
             "layout": "vertical",
             "spacing": "md",
             "contents": [
-                _info_row(" ", f"{teacher_name} "),
+                _info_row("老師", f"{teacher_name} 老師"),
                 _info_row(" ", f"{d_fmt} ({weekday})"),
                 _info_row(" ", booking.time),
                 _info_row("時長", f"{booking.duration} 分鐘"),
@@ -661,7 +661,7 @@ def build_booking_success_flex(booking):
                 },
                 {
                     "type": "text",
-                    "text": "",
+                    "text": "請準時出席，期待您的到來！",
                     "size": "sm",
                     "color": "#27AE60",
                     "wrap": True,
@@ -679,8 +679,8 @@ def build_booking_success_flex(booking):
                 "height": "sm",
                 "action": {
                     "type": "message",
-                    "label": "",
-                    "text": ""
+                    "label": "查詢我的預約",
+                    "text": "查詢預約"
                 }
             }]
         }
@@ -696,9 +696,9 @@ def build_my_bookings_flex(bookings):
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
-                    {"type": "text", "text": " ",
+                    {"type": "text", "text": "此日期已無可用時段",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": "",
+                    {"type": "text", "text": "請返回選擇其他日期",
                      "color": "#888888", "size": "sm", "margin": "md"}
                 ]
             },
@@ -711,8 +711,8 @@ def build_my_bookings_flex(bookings):
                     "color": "#4A90E2",
                     "action": {
                         "type": "message",
-                        "label": "",
-                        "text": ""
+                        "label": "查看老師名單",
+                        "text": "老師名單"
                     }
                 }]
             }
@@ -732,11 +732,11 @@ def build_my_bookings_flex(bookings):
                 "contents": [
                     {"type": "text", "text": b.booking_number,
                      "color": "#888888", "size": "xs"},
-                    {"type": "text", "text": f"{teacher_name} ",
+                    {"type": "text", "text": f"{teacher_name} 老師",
                      "weight": "bold", "size": "md"},
-                    {"type": "text", "text": f" {d_fmt}   {b.time}",
+                    {"type": "text", "text": f"日期：{d_fmt}  時間：{b.time}",
                      "size": "sm", "color": "#555555"},
-                    {"type": "text", "text": f" ${b.total_price} ",
+                    {"type": "text", "text": f"費用：${b.total_price} 元",
                      "size": "sm", "color": "#E05A2B"}
                 ]
             },
@@ -750,9 +750,9 @@ def build_my_bookings_flex(bookings):
                     "color": "#FF4444",
                     "action": {
                         "type": "postback",
-                        "label": "",
+                        "label": "取消預約",
                         "data": f"action=cancel_booking&booking_id={b.id}",
-                        "displayText": f" {b.booking_number}"
+                        "displayText": f"取消預約 {b.booking_number}"
                     }
                 }]
             }
@@ -774,9 +774,9 @@ def build_register_flex(teacher_id, date, time):
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {"type": "text", "text": " ", "weight": "bold",
+                {"type": "text", "text": "完成註冊", "weight": "bold",
                  "size": "xl", "color": "#ffffff"},
-                {"type": "text", "text": "",
+                {"type": "text", "text": "首次預約，請提供基本資料",
                  "size": "sm", "color": "#ffffff99"}
             ],
             "backgroundColor": "#8E44AD",
@@ -789,7 +789,7 @@ def build_register_flex(teacher_id, date, time):
             "contents": [
                 {
                     "type": "text",
-                    "text": "\n\n  \n\n\n  0912345678",
+                    "text": "請回覆以下格式：\n\n註冊 姓名 手機號碼\n\n範例：\n註冊 張小明 0912345678",
                     "wrap": True,
                     "size": "sm",
                     "color": "#555555"
